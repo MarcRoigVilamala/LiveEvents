@@ -1,0 +1,6 @@
+Click==7.0
+matplotlib
+numpy==1.16.0
+problog
+
+pandas
