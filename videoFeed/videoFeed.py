@@ -33,8 +33,11 @@ class VideoFeed(object):
         # return self.frames[self.current_frame]
 
         # success, image = self.video.read()
-        # # We are using Motion JPEG, but OpenCV defaults to capture raw images,
-        # # so we must encode it into JPEG in order to correctly display the
-        # # video stream.
-        # ret, jpeg = cv2.imencode('.jpg', image)
-        # return jpeg.tobytes()
+        # while success:
+        #     # We are using Motion JPEG, but OpenCV defaults to capture raw images,
+        #     # so we must encode it into JPEG in order to correctly display the
+        #     # video stream.
+        #     ret, jpeg = cv2.imencode('.jpg', image)
+        #     yield jpeg.tobytes()
+        #
+        #     success, image = self.video.read()
