@@ -55,10 +55,18 @@ def update_graph(fig, ax, line1, evaluation, graph_x_size):
 @click.option('-g', '--group_size', default=16)
 @click.option('-f', '--group_frequency', default=8)
 @click.option('--graph_x_size', default=100)
-def start_detecting(max_window, cep_frequency, group_size, group_frequency, graph_x_size):
+@click.option('-o', '--interesting_objects', default=None)
+def start_detecting(max_window, cep_frequency, group_size, group_frequency, graph_x_size, interesting_objects):
     if max_window < cep_frequency:
         print('The window of events can not be smaller than the frequency of checking', file=sys.stderr)
         sys.exit(-1)
+
+    # Find which are the interesting objects
+    if interesting_objects is None:
+        interesting_objects_list = None
+    else:
+        with open(interesting_objects, 'r') as f:
+            interesting_objects_list = [l.strip() for l in f]
 
     x = np.linspace(0, graph_x_size, graph_x_size)
     y = np.linspace(0, 1, graph_x_size)
@@ -96,7 +104,7 @@ def start_detecting(max_window, cep_frequency, group_size, group_frequency, grap
             if len(window) >= group_size:
                 relevant_frames = window[-group_size:]
 
-                events += get_events(relevant_frames)
+                events += get_events(relevant_frames, interesting_objects_list)
 
         # Every cep_frequency frames, run the CEP part with the relevant events
         if not (i + 1) % cep_frequency and events:
