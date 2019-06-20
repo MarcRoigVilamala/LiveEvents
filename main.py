@@ -51,19 +51,24 @@ def update_graph(fig, ax, line1, evaluation, graph_x_size):
 
 
 @click.command()
+@click.argument('expected_events')
 @click.option('-w', '--max_window', default=32)
 @click.option('--cep_frequency', default=8)
 @click.option('-g', '--group_size', default=16)
 @click.option('-f', '--group_frequency', default=8)
 @click.option('--graph_x_size', default=100)
 @click.option('-o', '--interesting_objects', default=None)
-def start_detecting(max_window, cep_frequency, group_size, group_frequency, graph_x_size, interesting_objects):
+def start_detecting(expected_events, max_window, cep_frequency, group_size, group_frequency, graph_x_size,
+                    interesting_objects):
     if max_window < cep_frequency + group_frequency:
         print(
             'The window of events can not be smaller than the sum of the frequency of checking and grouping',
             file=sys.stderr
         )
         sys.exit(-1)
+
+    with open(expected_events) as f:
+        expected_events_list = [l.strip() for l in f]
 
     # Find which are the interesting objects
     if interesting_objects is None:
@@ -122,6 +127,7 @@ def start_detecting(max_window, cep_frequency, group_size, group_frequency, grap
             new_evaluation = get_evaluation(
                 existing_timestamps=np.arange(0, i + 1, group_frequency),
                 query_timestamps=[i - group_size + 1],
+                expected_events=expected_events_list,
                 input_events=events
             )
 

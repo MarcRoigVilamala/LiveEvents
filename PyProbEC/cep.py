@@ -15,14 +15,14 @@ EVENT_NAMES = {
 }
 
 
-def get_evaluation(existing_timestamps, query_timestamps, input_events=()):
+def get_evaluation(existing_timestamps, query_timestamps, expected_events, input_events=()):
     event_definition_files = [
         'anomalyDetection/event_defs.pl',
     ]
 
     model = Model(event_definition_files)
 
-    return model.get_probabilities(existing_timestamps, query_timestamps, input_events=input_events)
+    return model.get_probabilities(existing_timestamps, query_timestamps, expected_events, input_events=input_events)
 
 
 # def create_graph(evaluation, filename):
