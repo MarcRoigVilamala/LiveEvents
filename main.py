@@ -51,15 +51,18 @@ def update_graph(fig, ax, line1, evaluation, graph_x_size):
 
 
 @click.command()
-@click.option('-w', '--max_window', default=10)
+@click.option('-w', '--max_window', default=32)
 @click.option('--cep_frequency', default=8)
 @click.option('-g', '--group_size', default=16)
 @click.option('-f', '--group_frequency', default=8)
 @click.option('--graph_x_size', default=100)
 @click.option('-o', '--interesting_objects', default=None)
 def start_detecting(max_window, cep_frequency, group_size, group_frequency, graph_x_size, interesting_objects):
-    if max_window < cep_frequency:
-        print('The window of events can not be smaller than the frequency of checking', file=sys.stderr)
+    if max_window < cep_frequency + group_frequency:
+        print(
+            'The window of events can not be smaller than the sum of the frequency of checking and grouping',
+            file=sys.stderr
+        )
         sys.exit(-1)
 
     # Find which are the interesting objects
@@ -92,15 +95,14 @@ def start_detecting(max_window, cep_frequency, group_size, group_frequency, grap
     evaluation = {}
 
     for i, frame in enumerate(video_input):
-        if i > 500:
-            break
-
         # Keep only the number of frames we need
         window.append((i, frame))
         window = window[-group_size:]
 
         # Every group_frequency, get the relevant events
         if not (i + 1) % group_frequency:
+            # print("Generating events at {} for {} to {}".format(i, i - group_size + 1, i))
+
             # Check that we have enough frames for the group (preventing errors on first iterations)
             if len(window) >= group_size:
                 relevant_frames = window[-group_size:]
@@ -131,26 +133,9 @@ def start_detecting(max_window, cep_frequency, group_size, group_frequency, grap
 
             # time.sleep(1)
 
+    print('################################################################################################')
     print(evaluation)
 
 
 if __name__ == '__main__':
     start_detecting()
-
-# import matplotlib.pyplot as plt
-# import numpy as np
-#
-# x = np.linspace(0, 6*np.pi, 100)
-# y = np.sin(x)
-#
-# # You probably won't need this if you're embedding things in a tkinter plot...
-# plt.ion()
-#
-# fig = plt.figure()
-# ax = fig.add_subplot(111)
-# line1, = ax.plot(x, y, 'r-')  # Returns a tuple of line objects, thus the comma
-#
-# for phase in np.linspace(0, 10*np.pi, 500):
-#     line1.set_ydata(np.sin(x + phase))
-#     fig.canvas.draw()
-#     fig.canvas.flush_events()
