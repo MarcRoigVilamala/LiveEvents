@@ -6,6 +6,7 @@ import click
 import numpy as np
 
 from PyProbEC.cep import get_evaluation
+from eventGeneration.event import Event
 from eventGeneration.eventGeneration import get_events
 from videoFeed.videoFeed import VideoFeed
 
@@ -107,16 +108,22 @@ def start_detecting(max_window, cep_frequency, group_size, group_frequency, grap
                 events += get_events(relevant_frames, interesting_objects_list)
 
         # Every cep_frequency frames, run the CEP part with the relevant events
-        if not (i + 1) % cep_frequency and events:
+        # The i - max_window >= -1 is for the first iteration, where we do not have all the relevant frames
+        if not (i + 1) % cep_frequency and i - group_size >= -1:
+            # print("Executing problog at {} for {} to {}".format(i, i - max_window + 1, i))
+
             # Remove the events that happened before the current window
             while events and events[0].timestamp < i - max_window:
                 # While we have events and the first event is before the current window, remove the first event
                 events = events[1:]
 
             new_evaluation = get_evaluation(
-                timestamps=np.arange(i - cep_frequency + 1, i + 1),
+                existing_timestamps=np.arange(0, i + 1, group_frequency),
+                query_timestamps=[i - group_size + 1],
                 input_events=events
             )
+
+            events += Event.from_evaluation(new_evaluation)
 
             evaluation = update_evaluation(evaluation, new_evaluation)
 

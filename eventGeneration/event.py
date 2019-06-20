@@ -1,19 +1,24 @@
 class Event(object):
-    def __init__(self, timestamp, event, probability):
+    def __init__(self, timestamp, event, probability, type='happensAt'):
         self.timestamp = timestamp
         self.event = event
         self.probability = probability
+        self.type = type
 
     @staticmethod
-    def from_problog(output):
-        for event, prob in output.items():
-            pass
-
-        return []
+    def from_evaluation(evaluation):
+        return [
+            Event(timestamp=timestamp, event='{} = true'.format(event), probability=prob, type='holdsAt_')
+            for event, event_values in evaluation.items()
+            for ids, ids_values in event_values.items()
+            for timestamp, prob in ids_values.items()
+            if prob > 0.0
+        ]
 
     def to_problog(self):
-        return '{probability}::happensAt({event}, {timestamp}).'.format(
+        return '{probability}::{type}({event}, {timestamp}).'.format(
             probability=self.probability,
+            type=self.type,
             event=self.event,
             timestamp=self.timestamp
         )
