@@ -80,16 +80,18 @@ class Model(object):
 
         return sorted([item for sublist in timepoints for item in sublist])
 
-    def get_values_for(self, timepoints, input_events=()):
+    def get_values_for(self, existing_timepoints, query_timepoints, input_events=()):
         # As the model we use self.model (basic EC definition + definition of rules by the user) and we add the list
         # of the input events
         string_model = self.model + '\n' + '\n'.join(map(lambda x: x.to_problog(), input_events))
+
+        string_model += '\nallTimePoints([{}]).'.format(', '.join(map(str, existing_timepoints)))
 
         updated_knowledge = ''
 
         res = {}
 
-        for timepoint in timepoints:
+        for timepoint in query_timepoints:
             for event in ['interesting', 'abuse']:
                 # query = 'query(holdsAt({event}(ID1, ID2) = true, {timepoint})) :- allIDs(IDs), ' \
                 #         'cartesianUnique(IDs, IDs, Tuples), member(Tuple, Tuples), ' \
@@ -110,8 +112,8 @@ class Model(object):
 
         return res
 
-    def get_probabilities(self, timepoints, input_events=()):
-        evaluation = self.get_values_for(timepoints, input_events=input_events)
+    def get_probabilities(self, existing_timepoints, query_timepoints, input_events=()):
+        evaluation = self.get_values_for(existing_timepoints, query_timepoints, input_events=input_events)
 
         return self._evaluation_to_prob(evaluation)
 

@@ -64,3 +64,12 @@ def previousTimePoint(t, timepoints):
         last = i
 
     return []
+
+
+@problog_export('+int', '+list', '-int')
+def nextTimePoint(t, timepoints):
+    for i in timepoints:
+        if i > t:
+            return i
+
+    return []
