@@ -50,6 +50,20 @@ def update_graph(fig, ax, line1, evaluation, graph_x_size):
     fig.canvas.flush_events()
 
 
+def at_rate(iterable, rate):
+    period = 1.0 / rate
+
+    start = time.time()
+
+    for i, v in enumerate(iterable):
+        now = time.time()
+        to_wait = period * i - (now - start)
+        if to_wait > 0:
+            time.sleep(to_wait)
+
+        yield v
+
+
 @click.command()
 @click.argument('expected_events')
 @click.option('-w', '--max_window', default=32)
@@ -58,8 +72,9 @@ def update_graph(fig, ax, line1, evaluation, graph_x_size):
 @click.option('-f', '--group_frequency', default=8)
 @click.option('--graph_x_size', default=100)
 @click.option('-o', '--interesting_objects', default=None)
+@click.option('--fps', default=30)
 def start_detecting(expected_events, max_window, cep_frequency, group_size, group_frequency, graph_x_size,
-                    interesting_objects):
+                    interesting_objects, fps):
     if max_window < cep_frequency + group_frequency:
         print(
             'The window of events can not be smaller than the sum of the frequency of checking and grouping',
@@ -99,7 +114,7 @@ def start_detecting(expected_events, max_window, cep_frequency, group_size, grou
 
     evaluation = {}
 
-    for i, frame in enumerate(video_input):
+    for i, frame in at_rate(enumerate(video_input), fps):
         # Keep only the number of frames we need
         window.append((i, frame))
         window = window[-group_size:]
