@@ -108,11 +108,11 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 
     if precompile:
         with open(precompile, 'r') as f:
-            aux = json.load(f)
+            json_precompile = json.load(f)
 
         precomp_args = PreCompilationArguments(
-            input_events=[Event(**e) for e in aux['input_events']],
-            queries=[Query(**q) for q in aux['queries']]
+            input_events=[Event(**e) for e in json_precompile['input_events']],
+            queries=[Query(**q) for q in json_precompile['queries']]
         )
 
         model = Model([event_definition], precomp_args)
