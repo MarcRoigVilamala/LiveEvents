@@ -1,3 +1,4 @@
+import json
 import sys
 import time
 
@@ -6,6 +7,8 @@ import click
 import numpy as np
 
 from PyProbEC.cep import get_evaluation
+from PyProbEC.model import Model
+from PyProbEC.precompilation import PreCompilationArguments, Query
 from eventGeneration.event import Event
 from eventGeneration.eventGeneration import get_events
 from videoFeed.videoFeed import VideoFeed
@@ -66,6 +69,7 @@ def at_rate(iterable, rate):
 
 @click.command()
 @click.argument('expected_events')
+@click.argument('event_definition')
 @click.option('-w', '--max_window', default=32)
 @click.option('--cep_frequency', default=8)
 @click.option('-g', '--group_size', default=16)
@@ -73,8 +77,9 @@ def at_rate(iterable, rate):
 @click.option('--graph_x_size', default=100)
 @click.option('-o', '--interesting_objects', default=None)
 @click.option('--fps', default=30)
-def start_detecting(expected_events, max_window, cep_frequency, group_size, group_frequency, graph_x_size,
-                    interesting_objects, fps):
+@click.option('--precompile', default=None)
+def start_detecting(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
+                    graph_x_size, interesting_objects, fps, precompile):
     if max_window < cep_frequency + group_frequency:
         print(
             'The window of events can not be smaller than the sum of the frequency of checking and grouping',
@@ -112,6 +117,19 @@ def start_detecting(expected_events, max_window, cep_frequency, group_size, grou
     window = []
     events = []
 
+    if precompile:
+        with open(precompile, 'r') as f:
+            aux = json.load(f)
+
+        precomp_args = PreCompilationArguments(
+            input_events=[Event(**e) for e in aux['input_events']],
+            queries=[Query(**q) for q in aux['queries']]
+        )
+
+        model = Model([event_definition], precomp_args)
+    else:
+        model = Model([event_definition])
+
     evaluation = {}
 
     for i, frame in at_rate(enumerate(video_input), fps):
@@ -139,9 +157,9 @@ def start_detecting(expected_events, max_window, cep_frequency, group_size, grou
                 # While we have events and the first event is before the current window, remove the first event
                 events = events[1:]
 
-            new_evaluation = get_evaluation(
-                existing_timestamps=np.arange(0, i + 1, group_frequency),
-                query_timestamps=[i - group_size + 1],
+            new_evaluation = model.get_probabilities_precompile(
+                existing_timepoints=np.arange(0, i + 1, group_frequency),
+                query_timepoints=[i - group_size + 1],
                 expected_events=expected_events_list,
                 input_events=events
             )

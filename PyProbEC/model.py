@@ -1,35 +1,25 @@
 from __future__ import print_function
-import time
 
+from problog.evaluator import SemiringSymbolic
 from problog.program import PrologString
 from problog import get_evaluatable
-
-from itertools import groupby
 
 from os import path
 import sys
 
 
 # Files that define how EC works
+from PyProbEC.precompilation import PreCompilation
+from PyProbEC.utils import unsorted_groupby, term_to_list, get_values
+
 PROBLOG_FILES = [
     'PyProbEC/ProbLogFiles/prob_ec_cached.pl',
     'PyProbEC/ProbLogFiles/prob_utils_cached.pl',
 ]
 
 
-def unsorted_groupby(iterable, key=None):
-    return groupby(sorted(iterable, key=key), key=key)
-
-
-def term_to_list(term):
-    if term.args:
-        return [term.args[0].value] + term_to_list(term.args[1])
-    else:
-        return []
-
-
 class Model(object):
-    def __init__(self, event_definition_files=()):
+    def __init__(self, event_definition_files=(), precompile_arguments=None):
         # The base model will be formed from the base ProbLog files that define EC
         # and the files given by the user that should define the rules for the
         # complex event they are trying to detect
@@ -40,18 +30,10 @@ class Model(object):
 
         self.model = '\n\n'.join(models)
 
-    @staticmethod
-    def _get_values(aux):
-        term = aux[0]
-        prob = aux[1]
-
-        gen_event = term.args[0].args[0]
-
-        event = gen_event.functor
-        ids = gen_event.args
-        timepoint = term.args[1].value
-
-        return event, ids, timepoint, prob
+        if precompile_arguments:
+            self.precompilation = PreCompilation(precompile_arguments, self.model)
+        else:
+            self.precompilation = None
 
     @staticmethod
     def _evaluation_to_prob(evaluation):
@@ -64,7 +46,7 @@ class Model(object):
                 }
                 for ids, v2 in unsorted_groupby(list(v1), key=lambda x: str(x[1]))
             }
-            for event, v1 in unsorted_groupby(map(Model._get_values, evaluation.items()), lambda x: x[0])
+            for event, v1 in unsorted_groupby(map(get_values, evaluation.items()), lambda x: x[0])
         }
 
     def get_timepoints(self):
@@ -115,6 +97,23 @@ class Model(object):
         )
 
         return self._evaluation_to_prob(evaluation)
+
+    def get_probabilities_precompile(self, existing_timepoints, query_timepoints, expected_events, input_events=()):
+        if self.precompilation:
+            evaluation, missing_events = self.precompilation.get_values_for(
+                query_timepoints, expected_events, input_events
+            )
+
+            res = self._evaluation_to_prob(evaluation)
+
+            if missing_events:
+                res.update(
+                    self.get_probabilities(existing_timepoints, query_timepoints, missing_events, input_events)
+                )
+
+            return res
+        else:
+            return self.get_probabilities(existing_timepoints, query_timepoints, expected_events, input_events)
 
     @staticmethod
     def read_model(m):

@@ -1,0 +1,31 @@
+{
+    "input_events": [
+        {
+            "timestamp": 8,
+            "event": "something"
+        },
+        {
+            "timestamp": 16,
+            "event": "something"
+        },
+        {
+            "timestamp": 0,
+            "event": "nothing"
+        },
+        {
+            "timestamp": 8,
+            "event": "nothing"
+        },
+        {
+            "timestamp": 8,
+            "event": "interesting=true",
+            "event_type": "holdsAt_"
+        }
+    ],
+    "queries": [
+        {
+            "event": "interesting",
+            "timepoint": 16
+        }
+    ]
+}
