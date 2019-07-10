@@ -67,17 +67,6 @@ def at_rate(iterable, rate):
         yield v
 
 
-@click.command()
-@click.argument('expected_events')
-@click.argument('event_definition')
-@click.option('-w', '--max_window', default=32)
-@click.option('--cep_frequency', default=8)
-@click.option('-g', '--group_size', default=16)
-@click.option('-f', '--group_frequency', default=8)
-@click.option('--graph_x_size', default=100)
-@click.option('-o', '--interesting_objects', default=None)
-@click.option('--fps', default=30)
-@click.option('--precompile', default=None)
 def start_detecting(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
                     graph_x_size, interesting_objects, fps, precompile):
     if max_window < cep_frequency + group_frequency:
@@ -176,5 +165,32 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     print(evaluation)
 
 
+@click.command()
+@click.argument('expected_events')
+@click.argument('event_definition')
+@click.option('-w', '--max_window', default=32)
+@click.option('--cep_frequency', default=8)
+@click.option('-g', '--group_size', default=16)
+@click.option('-f', '--group_frequency', default=8)
+@click.option('--graph_x_size', default=100)
+@click.option('-o', '--interesting_objects', default=None)
+@click.option('--fps', default=30)
+@click.option('--precompile', default=None)
+def main(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
+         graph_x_size, interesting_objects, fps, precompile):
+    start_detecting(
+        expected_events=expected_events,
+        event_definition=event_definition,
+        max_window=max_window,
+        cep_frequency=cep_frequency,
+        group_size=group_size,
+        group_frequency=group_frequency,
+        graph_x_size=graph_x_size,
+        interesting_objects=interesting_objects,
+        fps=fps,
+        precompile=precompile
+    )
+
+
 if __name__ == '__main__':
-    start_detecting()
+    main()
