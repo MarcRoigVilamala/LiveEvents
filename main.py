@@ -2,6 +2,7 @@ import json
 import sys
 import time
 
+import cv2
 import matplotlib.pyplot as plt
 import click
 import numpy as np
@@ -93,7 +94,7 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     plt.ion()
 
     fig = plt.figure()
-    ax = fig.add_subplot(111)
+    ax = fig.add_subplot(1, 1, 1)
     line1, = ax.plot(x, y, 'r-')  # Returns a tuple of line objects, thus the comma
 
     # for phase in np.linspace(0, 10*np.pi, 500):
@@ -122,6 +123,9 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     evaluation = {}
 
     for i, frame in at_rate(enumerate(video_input), fps):
+        cv2.imshow('Frame', frame)
+        # cv2.waitKey(1)
+
         # Keep only the number of frames we need
         window.append((i, frame))
         window = window[-group_size:]
@@ -163,6 +167,8 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 
     print('################################################################################################')
     print(evaluation)
+
+    cv2.destroyAllWindows()
 
 
 @click.command()
