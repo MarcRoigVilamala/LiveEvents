@@ -20,6 +20,6 @@ def get_values(aux):
 
     event = gen_event.functor
     ids = gen_event.args
-    timepoint = term.args[1].value
+    timestamp = term.args[1].value
 
-    return event, ids, timepoint, prob
+    return event, ids, timestamp, prob

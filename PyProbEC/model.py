@@ -38,45 +38,45 @@ class Model(object):
 
     @staticmethod
     def _evaluation_to_prob(evaluation):
-        # event -> ids -> timepoint -> prob
+        # event -> ids -> timestamp -> prob
         return {
             event: {
                 ids: {
-                    timepoint: list(v3)[0][3]
-                    for timepoint, v3 in unsorted_groupby(list(v2), key=lambda x: x[2])
+                    timestamp: list(v3)[0][3]
+                    for timestamp, v3 in unsorted_groupby(list(v2), key=lambda x: x[2])
                 }
                 for ids, v2 in unsorted_groupby(list(v1), key=lambda x: str(x[1]))
             }
             for event, v1 in unsorted_groupby(map(get_values, evaluation.items()), lambda x: x[0])
         }
 
-    def get_timepoints(self):
-        model = PrologString(self.model + '\n\nquery(allTimePoints(TPs)).')
+    def get_timestamps(self):
+        model = PrologString(self.model + '\n\nquery(allTimeStamps(TPs)).')
 
         knowledge = get_evaluatable().create_from(model)
 
-        timepoints = [
+        timestamps = [
             term_to_list(term.args[0])
             for term in knowledge.evaluate().keys()
-            if term.functor == 'allTimePoints'
+            if term.functor == 'allTimeStamps'
         ]
 
-        return sorted([item for sublist in timepoints for item in sublist])
+        return sorted([item for sublist in timestamps for item in sublist])
 
-    def get_values_for(self, existing_timepoints, query_timepoints, expected_events, input_events=()):
+    def get_values_for(self, existing_timestamps, query_timestamps, expected_events, input_events=()):
         # As the model we use self.model (basic EC definition + definition of rules by the user) and we add the list
         # of the input events
         string_model = self.model + '\n' + '\n'.join(map(lambda x: x.to_problog(), input_events))
 
-        string_model += '\nallTimePoints([{}]).'.format(', '.join(map(str, existing_timepoints)))
+        string_model += '\nallTimeStamps([{}]).'.format(', '.join(map(str, existing_timestamps)))
 
         updated_knowledge = ''
 
         res = {}
 
-        for timepoint in query_timepoints:
+        for timestamp in query_timestamps:
             for event in expected_events:
-                query = 'query(holdsAt({event} = true, {timepoint})).\n'.format(event=event, timepoint=timepoint)
+                query = 'query(holdsAt({event} = true, {timestamp})).\n'.format(event=event, timestamp=timestamp)
 
                 model = PrologString(string_model + '\n' + updated_knowledge + '\n' + query)
 
@@ -92,17 +92,17 @@ class Model(object):
 
         return res
 
-    def get_probabilities(self, existing_timepoints, query_timepoints, expected_events, input_events=()):
+    def get_probabilities(self, existing_timestamps, query_timestamps, expected_events, input_events=()):
         evaluation = self.get_values_for(
-            existing_timepoints, query_timepoints, expected_events, input_events=input_events
+            existing_timestamps, query_timestamps, expected_events, input_events=input_events
         )
 
         return self._evaluation_to_prob(evaluation)
 
-    def get_probabilities_precompile(self, existing_timepoints, query_timepoints, expected_events, input_events=()):
+    def get_probabilities_precompile(self, existing_timestamps, query_timestamps, expected_events, input_events=()):
         if self.precompilation:
             evaluation, missing_events = self.precompilation.get_values_for(
-                query_timepoints, expected_events, input_events
+                query_timestamps, expected_events, input_events
             )
 
             res = self._evaluation_to_prob(evaluation)
@@ -111,12 +111,12 @@ class Model(object):
                 input_events += Event.from_evaluation(res)
 
                 res.update(
-                    self.get_probabilities(existing_timepoints, query_timepoints, missing_events, input_events)
+                    self.get_probabilities(existing_timestamps, query_timestamps, missing_events, input_events)
                 )
 
             return res
         else:
-            return self.get_probabilities(existing_timepoints, query_timepoints, expected_events, input_events)
+            return self.get_probabilities(existing_timestamps, query_timestamps, expected_events, input_events)
 
     @staticmethod
     def read_model(m):

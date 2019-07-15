@@ -22,10 +22,10 @@ def translate(filename, output_path):
     output_filename = filename.split('/')[-1].split('.')[0] + '.pl'
 
     with open(output_path + output_filename, 'w') as o:
-        timepoints = set()
+        timestamps = set()
 
         for timestamp, labels in get_labels(filename):
-            timepoints.add(int(timestamp))
+            timestamps.add(int(timestamp))
 
             # Remove end of line characters, initial "(( and end ))"
             labels = labels.strip()[3:-3]
@@ -43,7 +43,7 @@ def translate(filename, output_path):
 
                 break  # We only care about the first one
 
-        o.write('allTimePoints({0}).\n'.format(sorted(list(timepoints))))
+        o.write('allTimeStamps({0}).\n'.format(sorted(list(timestamps))))
 
 
 if __name__ == '__main__':

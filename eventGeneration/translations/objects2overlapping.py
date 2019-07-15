@@ -132,10 +132,10 @@ def translate(filename, output_path, average_n_frames=16, every_n_frames=8):
     output_filename = filename.split('/')[-1].split('.')[0] + '.pl'
 
     with open(output_path + output_filename, 'w') as o:
-        timepoints = set()
+        timestamps = set()
 
-        for timepoint, to_overlap in split(filename, average_n_frames, every_n_frames).items():
-            timepoints.add(int(timepoint))
+        for timestamp, to_overlap in split(filename, average_n_frames, every_n_frames).items():
+            timestamps.add(int(timestamp))
 
             overlaps = count_beta(to_overlap, average_n_frames)
 
@@ -143,11 +143,11 @@ def translate(filename, output_path, average_n_frames=16, every_n_frames=8):
                 if probability > OVERLAPPING_THRESHOLD:
                     o.write(
                         "{0}::happensAt(overlapping({1}), {2}).\n".format(
-                            probability, key, timepoint
+                            probability, key, timestamp
                         )
                     )
 
-        # o.write('allTimePoints({0}).\n'.format(sorted(list(timepoints))))
+        # o.write('allTimeStamps({0}).\n'.format(sorted(list(timestamps))))
 
 
 if __name__ == '__main__':

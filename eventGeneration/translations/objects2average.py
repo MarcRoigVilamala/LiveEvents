@@ -57,7 +57,7 @@ def count_average(to_average):
     return res
 
 
-def count_beta(to_average, timepoint, n_frames):
+def count_beta(to_average, timestamp, n_frames):
     prob, max_count = get_probabilities(to_average)
 
     res = {}
@@ -71,7 +71,7 @@ def count_beta(to_average, timepoint, n_frames):
             positives = 1.0
             negatives = 1.0
 
-            for frame in range(timepoint, timepoint + n_frames):
+            for frame in range(timestamp, timestamp + n_frames):
                 probs_ex_by_frame.setdefault(frame, [])
 
                 probabilities = list(frames.get(frame, []))
@@ -111,14 +111,14 @@ def save_average(output, average):
         writer = csv.writer(o)
 
         writer.writerow(
-            ['Timepoint', 'Class', '# Appearances', 'Probability']
+            ['Timestamp', 'Class', '# Appearances', 'Probability']
         )
 
-        for timepoint in sorted(average.keys()):
-            for class_name in average[timepoint]:
-                for appearances in average[timepoint][class_name]:
+        for timestamp in sorted(average.keys()):
+            for class_name in average[timestamp]:
+                for appearances in average[timestamp][class_name]:
                     writer.writerow(
-                        [timepoint, class_name, appearances, average[timepoint][class_name][appearances]]
+                        [timestamp, class_name, appearances, average[timestamp][class_name][appearances]]
                     )
 
 
@@ -128,10 +128,10 @@ def save_average(output, average):
 def calculate_average(filepath='output.csv', output='averages/output.csv', average_n_frames=16, every_n_frames=8):
     res = {}
 
-    for timepoint, to_average in split(filepath, average_n_frames, every_n_frames).items():
-        res[timepoint] = count_beta(to_average, timepoint, average_n_frames)
+    for timestamp, to_average in split(filepath, average_n_frames, every_n_frames).items():
+        res[timestamp] = count_beta(to_average, timestamp, average_n_frames)
 
-        print(timepoint, end="\r", flush=True)
+        print(timestamp, end="\r", flush=True)
 
     save_average(output, res)
 

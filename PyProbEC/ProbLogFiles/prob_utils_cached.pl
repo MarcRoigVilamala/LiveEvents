@@ -4,10 +4,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %
-% Gives all timepoints
+% Gives all timestamps
 %
-%allTimePoints(SL):- findall(T, (holdsAt(F = V, T), number(T)), L), sort_no_duplicates(L, SL).
-%allTimePoints([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]).
+%allTimeStamps(SL):- findall(T, (holdsAt(F = V, T), number(T)), L), sort_no_duplicates(L, SL).
+%allTimeStamps([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]).
 %
 % Gives all ID instances
 %

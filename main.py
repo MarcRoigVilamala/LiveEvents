@@ -151,8 +151,8 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
                 events = events[1:]
 
             new_evaluation = model.get_probabilities_precompile(
-                existing_timepoints=np.arange(0, i + 1, group_frequency),
-                query_timepoints=[i - group_size + 1],
+                existing_timestamps=np.arange(0, i + 1, group_frequency),
+                query_timestamps=[i - group_size + 1],
                 expected_events=expected_events_list,
                 input_events=events
             )

@@ -13,10 +13,10 @@ class PreCompilation(object):
 
         model = model + '\n'.join(self.precomp_input)
 
-        all_timepoints = {e.timestamp for e in precomp_args.input_events}
-        all_timepoints = all_timepoints.union({q.timepoint for q in precomp_args.queries})
+        all_timestamps = {e.timestamp for e in precomp_args.input_events}
+        all_timestamps = all_timestamps.union({q.timestamp for q in precomp_args.queries})
 
-        model += '\nallTimePoints([{}]).'.format(', '.join(map(str, sorted(list(all_timepoints)))))
+        model += '\nallTimeStamps([{}]).'.format(', '.join(map(str, sorted(list(all_timestamps)))))
 
         self.precompilations = {}
         for query in precomp_args.queries:
@@ -30,7 +30,7 @@ class PreCompilation(object):
             self.precompilations[query.event] = {
                 'model': compiled_model,
                 'nodes': nodes,
-                'base_timepoint': query.timepoint
+                'base_timestamp': query.timestamp
             }
 
     @staticmethod
@@ -39,7 +39,7 @@ class PreCompilation(object):
 
         return get_evaluatable(name='ddnnf').create_from(prolog_string, semiring=SemiringSymbolic())
 
-    def get_values_for(self, query_timepoints, expected_events, input_events=()):
+    def get_values_for(self, query_timestamps, expected_events, input_events=()):
         res = {}
 
         input_events = list(input_events)
@@ -53,22 +53,22 @@ class PreCompilation(object):
 
         query_events = set(expected_events) - set(missing_events)
 
-        for timepoint in query_timepoints:
+        for timestamp in query_timestamps:
             for event in query_events:
                 precompilation = self.precompilations[event]
 
-                timepoint_difference = timepoint - precompilation['base_timepoint']
+                timestamp_difference = timestamp - precompilation['base_timestamp']
 
                 knowledge = precompilation['model']
 
-                self._update_knowledge_with(knowledge, input_events, timepoint_difference, precompilation['nodes'])
+                self._update_knowledge_with(knowledge, input_events, timestamp_difference, precompilation['nodes'])
 
                 evaluation = knowledge.evaluate()
 
                 # Fix the evaluation to have the correct output timestamps
                 fixed_evaluation = {}
                 for k, v in evaluation.items():
-                    new_k = Term(k.functor, k.args[0], Constant(k.args[1].functor + timepoint_difference))
+                    new_k = Term(k.functor, k.args[0], Constant(k.args[1].functor + timestamp_difference))
 
                     fixed_evaluation[new_k] = v
 
@@ -76,7 +76,7 @@ class PreCompilation(object):
 
                 input_events += [
                     Event(
-                        timestamp=t + timepoint_difference,
+                        timestamp=t + timestamp_difference,
                         event=event,
                         probability=prob,
                         event_type='holdsAt_'
@@ -86,11 +86,11 @@ class PreCompilation(object):
 
         return res, missing_events
 
-    def _update_knowledge_with(self, knowledge, input_events, timepoint_difference, nodes):
+    def _update_knowledge_with(self, knowledge, input_events, timestamp_difference, nodes):
         marked_probabilities = [
             (
                 e.to_problog_with(
-                    timestamp=e.timestamp - timepoint_difference,
+                    timestamp=e.timestamp - timestamp_difference,
                     probability=0.0
                 ),
                 e.probability
@@ -133,12 +133,12 @@ class PreCompilationArguments(object):
 
 
 class Query(object):
-    def __init__(self, event, timepoint):
+    def __init__(self, event, timestamp):
         self.event = event
-        self.timepoint = timepoint
+        self.timestamp = timestamp
 
     def create_from_model(self, model):
-        return model + '\nquery(holdsAt({event} = true, {timepoint})).'.format(
+        return model + '\nquery(holdsAt({event} = true, {timestamp})).'.format(
             event=self.event,
-            timepoint=self.timepoint
+            timestamp=self.timestamp
         )

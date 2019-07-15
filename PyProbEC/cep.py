@@ -38,14 +38,14 @@ def get_evaluation(existing_timestamps, query_timestamps, expected_events, input
 #                 values_x = []
 #                 values_y = []
 #
-#                 for timepoint, prob in sorted(evaluation[event][ids].items(), key=lambda x: x[0]):
-#                     values_x.append(timepoint)
+#                 for timestamp, prob in sorted(evaluation[event][ids].items(), key=lambda x: x[0]):
+#                     values_x.append(timestamp)
 #                     values_y.append(prob)
 #
 #                     # if prob > 0:
-#                     #     print('{0} -> {1} -> {2} -> {3}'.format(event, str(ids), timepoint, prob))
+#                     #     print('{0} -> {1} -> {2} -> {3}'.format(event, str(ids), timestamp, prob))
 #                     #     to_plot = True
-#                     print('{0},{1},{2}'.format(timepoint, prob, event))
+#                     print('{0},{1},{2}'.format(timestamp, prob, event))
 #                     to_plot = True
 #
 #                 if to_plot:

@@ -54,10 +54,10 @@ def sort_no_duplicates(l):
 
 
 @problog_export('+int', '+list', '-int')
-def previousTimePoint(t, timepoints):
+def previousTimeStamp(t, timestamps):
     last = []
 
-    for i in timepoints:
+    for i in timestamps:
         if i >= t:
             return last
 
@@ -67,8 +67,8 @@ def previousTimePoint(t, timepoints):
 
 
 @problog_export('+int', '+list', '-int')
-def nextTimePoint(t, timepoints):
-    for i in timepoints:
+def nextTimeStamp(t, timestamps):
+    for i in timestamps:
         if i > t:
             return i
 

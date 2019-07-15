@@ -17,16 +17,16 @@ def translate(filename, output_path):
     output_filename = filename.split('/')[-1].split('.')[0] + '.pl'
 
     with open(output_path + output_filename, 'w') as o:
-        timepoints = set()
+        timestamps = set()
 
         for timestamp, class_name, appearances, probability in get_objects(filename):
-            timepoints.add(int(timestamp))
+            timestamps.add(int(timestamp))
 
             o.write("{0}::happensAt(atLeast({1}, {2}), {3}).\n".format(
                 probability, appearances, class_name.replace(' ', '_').lower(), timestamp)
             )
 
-        # o.write('allTimePoints({0}).\n'.format(sorted(list(timepoints))))
+        # o.write('allTimeStamps({0}).\n'.format(sorted(list(timestamps))))
 
 
 if __name__ == '__main__':

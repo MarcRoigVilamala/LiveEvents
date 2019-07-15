@@ -1,13 +1,13 @@
 initiatedAt(interesting = true, T) :-
     happensAt(something, T),
-    allTimePoints(Timepoints),
-    nextTimePoint(T, Timepoints, Tnext),
+    allTimeStamps(Timestamps),
+    nextTimeStamp(T, Timestamps, Tnext),
     happensAt(something, Tnext).
 
 initiatedAt(interesting = false, T) :-
     happensAt(nothing, T),
-    allTimePoints(Timepoints),
-    previousTimePoint(T, Timepoints, Tprev),
+    allTimeStamps(Timestamps),
+    previousTimeStamp(T, Timestamps, Tprev),
     happensAt(nothing, Tprev).
 
 

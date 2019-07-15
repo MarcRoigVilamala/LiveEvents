@@ -7,10 +7,10 @@ def get_objects(filename):
             yield l
 
 
-def get_in_averages(timepoint, groups, every):
+def get_in_averages(timestamp, groups, every):
     return [
         i * every
-        for i in range(int((timepoint - groups + every) / every), int(timepoint / every) + 1)
+        for i in range(int((timestamp - groups + every) / every), int(timestamp / every) + 1)
         if i >= 0
     ]
 
