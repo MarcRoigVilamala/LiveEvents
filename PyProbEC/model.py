@@ -11,6 +11,7 @@ import sys
 # Files that define how EC works
 from PyProbEC.precompilation import PreCompilation
 from PyProbEC.utils import unsorted_groupby, term_to_list, get_values
+from eventGeneration.event import Event
 
 PROBLOG_FILES = [
     'PyProbEC/ProbLogFiles/prob_ec_cached.pl',
@@ -107,6 +108,8 @@ class Model(object):
             res = self._evaluation_to_prob(evaluation)
 
             if missing_events:
+                input_events += Event.from_evaluation(res)
+
                 res.update(
                     self.get_probabilities(existing_timepoints, query_timepoints, missing_events, input_events)
                 )
