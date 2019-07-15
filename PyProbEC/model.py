@@ -80,7 +80,7 @@ class Model(object):
 
                 model = PrologString(string_model + '\n' + updated_knowledge + '\n' + query)
 
-                knowledge = get_evaluatable().create_from(model)
+                knowledge = get_evaluatable(name='ddnnf').create_from(model, semiring=SemiringSymbolic())
 
                 evaluation = knowledge.evaluate()
 
