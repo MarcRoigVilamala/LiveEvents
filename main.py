@@ -30,12 +30,9 @@ def update_evaluation(evaluation, new_evaluation):
     return evaluation
 
 
-def update_graph(fig, ax, line1, evaluation, graph_x_size):
-    x_data = sorted(evaluation['interesting']['()'].keys())
-    y_data = [evaluation['interesting']['()'][k] for k in x_data]
-
-    # print('x_data', x_data)
-    # print('y_data', y_data)
+def update_graph(fig, ax, lines, evaluation, graph_x_size):
+    # We can get the x_data from just one of the lines since they should all be the same
+    x_data = sorted(evaluation[list(lines.keys())[0]]['()'].keys())
 
     # Find which range we want to show based on the data we have
     max_data = x_data[-1]
@@ -48,8 +45,12 @@ def update_graph(fig, ax, line1, evaluation, graph_x_size):
 
     ax.set_xlim(left, right)
 
-    line1.set_xdata(x_data)
-    line1.set_ydata(y_data)
+    for event, line in lines.items():
+        y_data = [evaluation[event]['()'][k] for k in x_data]
+
+        line.set_xdata(x_data)
+        line.set_ydata(y_data)
+
     fig.canvas.draw()
     fig.canvas.flush_events()
 
@@ -69,7 +70,7 @@ def at_rate(iterable, rate):
 
 
 def start_detecting(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
-                    graph_x_size, interesting_objects, fps, precompile):
+                    graph_x_size, interesting_objects, fps, precompile, graph, video):
     if max_window < cep_frequency + group_frequency:
         print(
             'The window of events can not be smaller than the sum of the frequency of checking and grouping',
@@ -87,20 +88,21 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
         with open(interesting_objects, 'r') as f:
             interesting_objects_list = [l.strip() for l in f]
 
-    x = np.linspace(0, graph_x_size, graph_x_size)
-    y = np.linspace(0, 1, graph_x_size)
+    if graph:
+        x = np.linspace(0, graph_x_size, graph_x_size)
+        y = np.linspace(0, 1, graph_x_size)
 
-    # You probably won't need this if you're embedding things in a tkinter plot...
-    plt.ion()
+        # You probably won't need this if you're embedding things in a tkinter plot...
+        plt.ion()
 
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    line1, = ax.plot(x, y, 'r-')  # Returns a tuple of line objects, thus the comma
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
 
-    # for phase in np.linspace(0, 10*np.pi, 500):
-    #     line1.set_ydata(np.sin(x + phase))
-    #     fig.canvas.draw()
-    #     fig.canvas.flush_events()
+        lines = {}
+        for event in expected_events_list:
+            lines[event], = ax.plot(x, y, label=event)  # Returns a tuple of line objects, thus the comma
+
+        plt.legend()
 
     video_input = VideoFeed()
 
@@ -123,8 +125,9 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     evaluation = {}
 
     for i, frame in at_rate(enumerate(video_input), fps):
-        cv2.imshow('Frame', frame)
-        # cv2.waitKey(1)
+        if video:
+            cv2.imshow('Frame', frame)
+            cv2.waitKey(1)
 
         # Keep only the number of frames we need
         window.append((i, frame))
@@ -161,7 +164,10 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 
             evaluation = update_evaluation(evaluation, new_evaluation)
 
-            update_graph(fig, ax, line1, evaluation, graph_x_size)
+            print(new_evaluation)
+
+            if graph:
+                update_graph(fig, ax, lines, evaluation, graph_x_size)
 
             # time.sleep(1)
 
@@ -182,8 +188,10 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 @click.option('-o', '--interesting_objects', default=None)
 @click.option('--fps', default=30)
 @click.option('--precompile', default=None)
+@click.option('--graph', is_flag=True)
+@click.option('--video', is_flag=True)
 def main(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
-         graph_x_size, interesting_objects, fps, precompile):
+         graph_x_size, interesting_objects, fps, precompile, graph, video):
     start_detecting(
         expected_events=expected_events,
         event_definition=event_definition,
@@ -194,7 +202,9 @@ def main(expected_events, event_definition, max_window, cep_frequency, group_siz
         graph_x_size=graph_x_size,
         interesting_objects=interesting_objects,
         fps=fps,
-        precompile=precompile
+        precompile=precompile,
+        graph=graph,
+        video=video
     )
 
 
