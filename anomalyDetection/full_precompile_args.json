@@ -1,0 +1,66 @@
+{
+    "input_events": [
+        {
+            "timestamp": 8,
+            "event": "something"
+        },
+        {
+            "timestamp": 16,
+            "event": "something"
+        },
+        {
+            "timestamp": 0,
+            "event": "nothing"
+        },
+        {
+            "timestamp": 8,
+            "event": "nothing"
+        },
+        {
+            "timestamp": 8,
+            "event": "interesting=true",
+            "event_type": "holdsAt_"
+        },
+
+        {
+            "timestamp": 8,
+            "event": "atLeast(2, person)"
+        },
+        {
+            "timestamp": 8,
+            "event": "overlapping(person, person)"
+        },
+        {
+            "timestamp": 8,
+            "event": "atLeast(1, person)"
+        },
+        {
+            "timestamp": 8,
+            "event": "atLeast(1, dog)"
+        },
+        {
+            "timestamp": 8,
+            "event": "overlapping(person, dog)"
+        },
+        {
+            "timestamp": 16,
+            "event": "interesting=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 8,
+            "event": "abuse=true",
+            "event_type": "holdsAt_"
+        }
+    ],
+    "queries": [
+        {
+            "event": "interesting",
+            "timestamp": 16
+        },
+        {
+            "event": "abuse",
+            "timestamp": 16
+        }
+    ]
+}
