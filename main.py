@@ -3,7 +3,6 @@ import sys
 import time
 
 import cv2
-import matplotlib.pyplot as plt
 import click
 import numpy as np
 
@@ -11,7 +10,11 @@ from PyProbEC.cep import get_evaluation
 from PyProbEC.model import Model
 from PyProbEC.precompilation import PreCompilationArguments, Query
 from eventGeneration.event import Event
-from eventGeneration.eventGeneration import get_events
+from eventGeneration.eventGeneration import EventGenerator
+from eventGeneration.objectDetection.objectDetection import ObjectDetectorEventGenerator
+# from eventGeneration.hardCodedEvents import HardCodedObjectDetectorEventGenerator as ObjectDetectorEventGenerator
+from eventGeneration.hardCodedEvents import HardCodedVideoEventGenerator as VideoEventGenerator
+from graph import Graph
 from videoFeed.videoFeed import VideoFeed
 
 
@@ -30,31 +33,6 @@ def update_evaluation(evaluation, new_evaluation):
     return evaluation
 
 
-def update_graph(fig, ax, lines, evaluation, graph_x_size):
-    # We can get the x_data from just one of the lines since they should all be the same
-    x_data = sorted(evaluation[list(lines.keys())[0]]['()'].keys())
-
-    # Find which range we want to show based on the data we have
-    max_data = x_data[-1]
-    right = max(max_data, graph_x_size)
-    left = right - graph_x_size
-
-    # Increase the range by 10% on each side to make it less cramped
-    left -= graph_x_size / 10
-    right += graph_x_size / 10
-
-    ax.set_xlim(left, right)
-
-    for event, line in lines.items():
-        y_data = [evaluation[event]['()'][k] for k in x_data]
-
-        line.set_xdata(x_data)
-        line.set_ydata(y_data)
-
-    fig.canvas.draw()
-    fig.canvas.flush_events()
-
-
 def at_rate(iterable, rate):
     period = 1.0 / rate
 
@@ -69,8 +47,28 @@ def at_rate(iterable, rate):
         yield v
 
 
+def generate_model(event_definition, precompile):
+    if precompile:
+        with open(precompile, 'r') as f:
+            json_precompile = json.load(f)
+
+        precomp_args = PreCompilationArguments(
+            input_events=[Event(**e) for e in json_precompile['input_events']],
+            queries=[Query(**q) for q in json_precompile['queries']]
+        )
+
+        return Model([event_definition], precomp_args)
+    else:
+        return Model([event_definition])
+
+
+def update_video(frame):
+    cv2.imshow('Frame', frame)
+    cv2.waitKey(1)
+
+
 def start_detecting(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
-                    graph_x_size, interesting_objects, fps, precompile, graph, video):
+                    graph_x_size, interesting_objects, fps, precompile, use_graph, video):
     if max_window < cep_frequency + group_frequency:
         print(
             'The window of events can not be smaller than the sum of the frequency of checking and grouping',
@@ -88,46 +86,31 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
         with open(interesting_objects, 'r') as f:
             interesting_objects_list = [l.strip() for l in f]
 
-    if graph:
-        x = np.linspace(0, graph_x_size, graph_x_size)
-        y = np.linspace(0, 1, graph_x_size)
-
-        # You probably won't need this if you're embedding things in a tkinter plot...
-        plt.ion()
-
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-
-        lines = {}
-        for event in expected_events_list:
-            lines[event], = ax.plot(x, y, label=event)  # Returns a tuple of line objects, thus the comma
-
-        plt.legend()
+    # If we are using a graph, create it
+    if use_graph:
+        graph = Graph(graph_x_size, expected_events_list)
+    else:
+        graph = None
 
     video_input = VideoFeed()
+
+    event_generator = EventGenerator(
+        [
+            ObjectDetectorEventGenerator(interesting_objects_list),
+            VideoEventGenerator()
+        ]
+    )
 
     window = []
     events = []
 
-    if precompile:
-        with open(precompile, 'r') as f:
-            json_precompile = json.load(f)
-
-        precomp_args = PreCompilationArguments(
-            input_events=[Event(**e) for e in json_precompile['input_events']],
-            queries=[Query(**q) for q in json_precompile['queries']]
-        )
-
-        model = Model([event_definition], precomp_args)
-    else:
-        model = Model([event_definition])
+    model = generate_model(event_definition, precompile)
 
     evaluation = {}
 
     for i, frame in at_rate(enumerate(video_input), fps):
         if video:
-            cv2.imshow('Frame', frame)
-            cv2.waitKey(1)
+            update_video(frame)
 
         # Keep only the number of frames we need
         window.append((i, frame))
@@ -141,7 +124,7 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
             if len(window) >= group_size:
                 relevant_frames = window[-group_size:]
 
-                events += get_events(relevant_frames, interesting_objects_list)
+                events += event_generator.get_events(relevant_frames)
 
         # Every cep_frequency frames, run the CEP part with the relevant events
         # The i - max_window >= -1 is for the first iteration, where we do not have all the relevant frames
@@ -167,7 +150,7 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
             print(new_evaluation)
 
             if graph:
-                update_graph(fig, ax, lines, evaluation, graph_x_size)
+                graph.update(evaluation)
 
             # time.sleep(1)
 
@@ -203,7 +186,7 @@ def main(expected_events, event_definition, max_window, cep_frequency, group_siz
         interesting_objects=interesting_objects,
         fps=fps,
         precompile=precompile,
-        graph=graph,
+        use_graph=graph,
         video=video
     )
 
