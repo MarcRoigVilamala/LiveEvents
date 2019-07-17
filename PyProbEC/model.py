@@ -15,7 +15,6 @@ from eventGeneration.event import Event
 
 PROBLOG_FILES = [
     'PyProbEC/ProbLogFiles/prob_ec_cached.pl',
-    'PyProbEC/ProbLogFiles/prob_utils_cached.pl',
 ]
 
 
