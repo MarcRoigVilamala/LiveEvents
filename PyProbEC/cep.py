@@ -9,8 +9,8 @@ NUMBER_EXECUTIONS = 5
 test_file = 'example/test.pl'
 
 EVENT_NAMES = {
-    'interesting': 'Video Only',
-    'abuse': 'Video + Object Detection',
+    'videoOnly': 'Video Only',
+    'videoAndObjDet': 'Video + Object Detection',
     'run_over': 'Run Over',
 }
 

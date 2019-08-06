@@ -18,7 +18,7 @@
         },
         {
             "timestamp": 8,
-            "event": "interesting=true",
+            "event": "videoOnly=true",
             "event_type": "holdsAt_"
         },
 
@@ -44,22 +44,22 @@
         },
         {
             "timestamp": 16,
-            "event": "interesting=true",
+            "event": "videoOnly=true",
             "event_type": "holdsAt_"
         },
         {
             "timestamp": 8,
-            "event": "abuse=true",
+            "event": "videoAndObjDet=true",
             "event_type": "holdsAt_"
         }
     ],
     "queries": [
         {
-            "event": "interesting",
+            "event": "videoOnly",
             "timestamp": 16
         },
         {
-            "event": "abuse",
+            "event": "videoAndObjDet",
             "timestamp": 16
         }
     ]

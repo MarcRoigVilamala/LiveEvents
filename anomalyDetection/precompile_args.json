@@ -18,13 +18,13 @@
         },
         {
             "timestamp": 8,
-            "event": "interesting=true",
+            "event": "videoOnly=true",
             "event_type": "holdsAt_"
         }
     ],
     "queries": [
         {
-            "event": "interesting",
+            "event": "videoOnly",
             "timestamp": 16
         }
     ]
