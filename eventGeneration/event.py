@@ -15,6 +15,26 @@ class Event(object):
             if prob > 0.0
         ]
 
+    @staticmethod
+    def from_file(filename):
+        with open(filename, 'r') as f:
+            res = []
+
+            for l in f:
+                if '::' in l:
+                    probability, rest = l.strip().split('::')
+                    event_type, rest = rest.split('(', 1)
+                    event, timestamp = rest.rsplit(', ', 1)
+
+                    probability = float(probability)
+                    timestamp = int(timestamp[:-2])
+
+                    res.append(
+                        Event(timestamp, event, probability, event_type)
+                    )
+
+            return res
+
     def to_prolog(self):
         return self.to_prolog_with()
 
