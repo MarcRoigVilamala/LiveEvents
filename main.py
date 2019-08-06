@@ -6,16 +6,18 @@ import cv2
 import click
 import numpy as np
 
-from PyProbEC.cep import get_evaluation
 from PyProbEC.model import Model
 from PyProbEC.precompilation import PreCompilationArguments, Query
 from eventGeneration.event import Event
 from eventGeneration.eventGeneration import EventGenerator
-from eventGeneration.objectDetection.objectDetection import ObjectDetectorEventGenerator
+# from eventGeneration.objectDetection.objectDetection import ObjectDetectorEventGenerator
 # from eventGeneration.hardCodedEvents import HardCodedObjectDetectorEventGenerator as ObjectDetectorEventGenerator
-from eventGeneration.hardCodedEvents import HardCodedVideoEventGenerator as VideoEventGenerator
+# from eventGeneration.hardCodedEvents import HardCodedVideoEventGenerator as VideoEventGenerator
+from eventGeneration.fromFileEvents import FromFileEventGenerator
 from graph import Graph
 from videoFeed.videoFeed import VideoFeed
+
+VIDEO_WINDOW_NAME = 'CCTV Feed'
 
 
 def update_evaluation(evaluation, new_evaluation):
@@ -62,13 +64,19 @@ def generate_model(event_definition, precompile):
         return Model([event_definition])
 
 
+def initialize_video(x, y):
+    cv2.namedWindow(VIDEO_WINDOW_NAME)
+    cv2.moveWindow(VIDEO_WINDOW_NAME, x, y)
+
+
 def update_video(frame):
-    cv2.imshow('Frame', frame)
+    cv2.imshow(VIDEO_WINDOW_NAME, frame)
     cv2.waitKey(1)
 
 
 def start_detecting(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
-                    graph_x_size, interesting_objects, fps, precompile, use_graph, video):
+                    graph_x_size, interesting_objects, fps, precompile, text, use_graph, video, video_name,
+                    video_x_position, video_y_position):
     if max_window < cep_frequency + group_frequency:
         print(
             'The window of events can not be smaller than the sum of the frequency of checking and grouping',
@@ -92,12 +100,18 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     else:
         graph = None
 
-    video_input = VideoFeed()
+    if video:
+        initialize_video(video_x_position, video_y_position)
+
+    video_input = VideoFeed(video_file='/home/marc/Videos/UCF_CRIME/Crime/Fighting/{}.mp4'.format(video_name))
 
     event_generator = EventGenerator(
         [
-            ObjectDetectorEventGenerator(interesting_objects_list),
-            VideoEventGenerator()
+            # ObjectDetectorEventGenerator(interesting_objects_list),
+            # VideoEventGenerator()
+            FromFileEventGenerator('ProbLogEvents/Fighting/3DResNet/{}.pl'.format(video_name)),
+            FromFileEventGenerator('ProbLogEvents/Fighting/AtLeast/{}.pl'.format(video_name)),
+            FromFileEventGenerator('ProbLogEvents/Fighting/Overlapping/{}.pl'.format(video_name))
         ]
     )
 
@@ -147,34 +161,53 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 
             evaluation = update_evaluation(evaluation, new_evaluation)
 
-            print(new_evaluation)
+            if text:
+                print(new_evaluation)
 
             if graph:
                 graph.update(evaluation)
 
-            # time.sleep(1)
-
     print('################################################################################################')
     print(evaluation)
+
+    if use_graph:
+        input('Press enter to finish')
 
     cv2.destroyAllWindows()
 
 
 @click.command()
-@click.argument('expected_events')
-@click.argument('event_definition')
-@click.option('-w', '--max_window', default=32)
-@click.option('--cep_frequency', default=8)
-@click.option('-g', '--group_size', default=16)
-@click.option('-f', '--group_frequency', default=8)
-@click.option('--graph_x_size', default=100)
-@click.option('-o', '--interesting_objects', default=None)
-@click.option('--fps', default=30)
-@click.option('--precompile', default=None)
-@click.option('--graph', is_flag=True)
-@click.option('--video', is_flag=True)
+@click.argument('expected_events', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
+@click.argument('event_definition', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
+@click.option('-w', '--max_window', default=32, help='Maximum number of frames we want to remember')
+@click.option('--cep_frequency', default=8, help='Frequency for calling the CEP code to generate new complex events')
+@click.option('-g', '--group_size', default=16, help='Number of frames considered to generate each simple event')
+@click.option('-f', '--group_frequency', default=8, help='Frequency with which we generate simple events')
+@click.option('--graph_x_size', default=100, help='Size of the x axis (time) for the graph. Only if graph is in use')
+@click.option(
+    '-o', '--interesting_objects', default=None,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help='File defining the list of objects we care about from the object detector output'
+)
+@click.option('--fps', default=30, help='Number of frames that are processed every second')
+@click.option(
+    '--precompile', default=None, type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help='JSON file defining the inputs and outputs for which we can use precompilation'
+)
+@click.option(
+    '--text', is_flag=True, help='If used, a live text will be printed with the values of the different complex events'
+)
+@click.option(
+    '--graph', is_flag=True,
+    help='If used, a live graph will be generated showing the values of the different complex events'
+)
+@click.option('--video', is_flag=True, help='If used, a live video will be shown')
+@click.option('--video_name', default=None, help='Name of the video for which we want to perform CEP')
+@click.option('--video_x_position', default=1000, help='X position to spawn the video. Only if video is in use')
+@click.option('--video_y_position', default=200, help='Y position to spawn the video. Only if video is in use')
 def main(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
-         graph_x_size, interesting_objects, fps, precompile, graph, video):
+         graph_x_size, interesting_objects, fps, precompile, text, graph, video, video_name, video_x_position,
+         video_y_position):
     start_detecting(
         expected_events=expected_events,
         event_definition=event_definition,
@@ -186,8 +219,12 @@ def main(expected_events, event_definition, max_window, cep_frequency, group_siz
         interesting_objects=interesting_objects,
         fps=fps,
         precompile=precompile,
+        text=text,
         use_graph=graph,
-        video=video
+        video=video,
+        video_name=video_name,
+        video_x_position=video_x_position,
+        video_y_position=video_y_position
     )
 
 
