@@ -26,7 +26,7 @@ class Graph(object):
 
         self.last_rectangle = {}
 
-        plt.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0))
+        plt.legend()
 
     def add_rectangle(self, event, x1, x2):
         return self.ax.add_patch(patches.Rectangle((x1, -1), x2 - x1, 3, color=self.colors[event], alpha=0.3))
