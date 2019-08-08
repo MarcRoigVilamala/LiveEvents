@@ -103,7 +103,27 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     if video:
         initialize_video(video_x_position, video_y_position)
 
-    video_input = VideoFeed(video_file='/home/marc/Videos/UCF_CRIME/Crime/Fighting/{}.mp4'.format(video_name))
+    # video_name = 'Fighting006_x264'  # Person attacks someone in a ¿station?
+    # video_name = 'Fighting033_x264'  # Guy knocks down two other guys (from annotated ones)
+    # video_name = 'Fighting026_x264'  # People fighting in a restaurant
+
+    # video_name = 'Fighting021_x264'  # Two cars stop in front of each other in the street. Not much fighting but could be sings of early conflict
+
+    # video_name = 'Fighting005_x264'  # Two people try to rob a hotel
+    # video_name = 'Fighting025_x264'  # Fighting in a prison and then guards come in
+    # video_name = 'Fighting038_x264'  # Two people run in and start fighting with each other
+    # video_name = 'Fighting047_x264'  # People fighting in garage (from annotated)
+    # video_name = 'Fighting048_x264'  # People with bikes fight in the street
+    # video_name = 'Fighting051_x264'  # Fight in a cyber cafe
+
+    # video_name = 'Fighting004_x264'  # Fighting around billard table
+    # video_name = 'Fighting015_x264'  # Someone tries to rob a store
+    # video_name = 'Fighting018_x264'  # Girl gets robbed and kicks the robber (karate video from annotated ones)
+    # video_name = 'Fighting019_x264'  # Fighting with billard table
+    # video_name = 'Fighting020_x264'  # Fighiting in the street. Does not have calm video
+    # video_name = 'Fighting039_x264'  # People fighting in the street
+    # video_input = VideoFeed(video_file='/home/marc/Videos/UCF_CRIME/Crime/Fighting/{}.mp4'.format(video_name))
+    video_input = VideoFeed(video_name=video_name)
 
     event_generator = EventGenerator(
         [
@@ -122,7 +142,7 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 
     evaluation = {}
 
-    for i, frame in at_rate(enumerate(video_input), fps):
+    for i, frame in at_rate(video_input, fps):
         if video:
             update_video(frame)
 
