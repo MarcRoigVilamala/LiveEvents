@@ -4,11 +4,11 @@ import cv2
 
 
 class VideoFeed(object):
-    def __init__(self):
-        self.frames = [
-            open('frames/frame{}.jpg'.format(frame), 'rb').read()
-            for frame in range(100)
-        ]
+    def __init__(self, video_file='/home/marc/Videos/UCF_CRIME/Crime/Abuse/Abuse001_x264.mp4'):
+        # self.frames = [
+        #     open('frames/frame0.jpg'.format(frame), 'rb').read()
+        #     for frame in range(100)
+        # ]
 
         # self.current_frame = -1
 
@@ -16,15 +16,13 @@ class VideoFeed(object):
         # from a webcam, comment the line below out and use a video file
         # instead.
         # self.video = cv2.VideoCapture(0)
-        # If you decide to use video.mp4, you must have this file in the folder
-        # as the cep.py.
-        # self.video = cv2.VideoCapture('video.mp4')
+        self.video = cv2.VideoCapture(video_file)
 
-    # def __del__(self):
-    #     self.video.release()
+    def __del__(self):
+        self.video.release()
 
     def __iter__(self):
-        return cycle(self.frames)
+        # return cycle(self.frames)
         # return self.frames.__iter__()
 
         # self.current_frame += 1
@@ -32,8 +30,10 @@ class VideoFeed(object):
         #
         # return self.frames[self.current_frame]
 
-        # success, image = self.video.read()
-        # while success:
-        #     yield image
-        #
-        #     success, image = self.video.read()
+        success, image = self.video.read()
+        while success:
+            yield image
+
+            success, image = self.video.read()
+
+        self.video.release()
