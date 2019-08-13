@@ -37,6 +37,5 @@ broken(F = V, T1, T2) :-
   T3 > T1,
   broken(F = V, T1, T3).
 
-%previousTimeStamp(T, Tprev):- Tprev is T - 40.
-%previousTimeStamp(T, Tprev):- Tprev is T - 8.
 %previousTimeStamp(T, Timestamps, Tprev):- Tprev is T - 8.
+%nextTimeStamp(T, Timestamps, Tnext):- Tnext is T + 8.
