@@ -12,7 +12,7 @@ class FromFileEventGenerator(object):
         res = [
             e
             for e in self.events
-            if e.timestamp in timestamps
+            if e.timestamp == timestamps[0]
         ]
 
         return res
