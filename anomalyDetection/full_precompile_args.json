@@ -1,5 +1,5 @@
 {
-    "input_events": [
+    "input_clauses": [
         {
             "timestamp": 8,
             "event": "something"
@@ -55,11 +55,11 @@
     ],
     "queries": [
         {
-            "event": "videoOnly",
+            "identifier": "videoOnly",
             "timestamp": 16
         },
         {
-            "event": "videoAndObjDet",
+            "identifier": "videoAndObjDet",
             "timestamp": 16
         }
     ]

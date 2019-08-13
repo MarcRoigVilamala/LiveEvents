@@ -7,7 +7,8 @@ import click
 import numpy as np
 
 from PyProbEC.model import Model
-from PyProbEC.precompilation import PreCompilationArguments, Query
+from preCompilation.PreCompilation import PreCompilationArguments
+from PyProbEC.precompilation import EventQuery
 from eventGeneration.event import Event
 from eventGeneration.eventGeneration import EventGenerator
 # from eventGeneration.objectDetection.objectDetection import ObjectDetectorEventGenerator
@@ -55,8 +56,8 @@ def generate_model(event_definition, precompile):
             json_precompile = json.load(f)
 
         precomp_args = PreCompilationArguments(
-            input_events=[Event(**e) for e in json_precompile['input_events']],
-            queries=[Query(**q) for q in json_precompile['queries']]
+            input_clauses=[Event(**e) for e in json_precompile['input_clauses']],
+            queries=[EventQuery(**q) for q in json_precompile['queries']]
         )
 
         return Model([event_definition], precomp_args)

@@ -1,8 +1,17 @@
-class Event(object):
+from preCompilation.PreCompilation import InputClause
+
+
+class Event(InputClause):
+    def get_clause_format(self):
+        return '\n{{probability}}::{event_type}({{identifier}}, {{timestamp}}).'.format(
+            event_type=self.event_type
+        )
+
+    def for_mock_model(self):
+        return self.to_problog_with(probability=0.0)
+
     def __init__(self, timestamp, event, probability=0.0, event_type='happensAt'):
-        self.timestamp = timestamp
-        self.event = event
-        self.probability = probability
+        super().__init__(event, timestamp, probability)
         self.event_type = event_type
 
     @staticmethod
@@ -34,43 +43,6 @@ class Event(object):
                     )
 
             return res
-
-    def to_prolog(self):
-        return self.to_prolog_with()
-
-    def to_prolog_with(self, event_type=None, event=None, timestamp=None):
-        if event_type is None:
-            event_type = self.event_type
-        if event is None:
-            event = self.event
-        if timestamp is None:
-            timestamp = self.timestamp
-
-        return '{event_type}({event}, {timestamp}).'.format(
-            event_type=event_type,
-            event=event,
-            timestamp=timestamp
-        )
-
-    def to_problog(self):
-        return self.to_problog_with()
-
-    def to_problog_with(self, probability=None, event_type=None, event=None, timestamp=None):
-        if probability is None:
-            probability = self.probability
-        if event_type is None:
-            event_type = self.event_type
-        if event is None:
-            event = self.event
-        if timestamp is None:
-            timestamp = self.timestamp
-
-        return '{probability}::{event_type}({event}, {timestamp}).'.format(
-            probability=probability,
-            event_type=event_type,
-            event=event,
-            timestamp=timestamp
-        )
 
     def __repr__(self):
         return self.to_problog()
