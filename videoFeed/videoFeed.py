@@ -5,7 +5,7 @@ import cv2
 
 
 class VideoFeed(object):
-    def __init__(self, video_file='/home/marc/Videos/UCF_CRIME/Crime/Abuse/Abuse001_x264.mp4'):
+    def __init__(self, video_file='/home/marc/Videos/UCF_CRIME/Crime/Abuse/Abuse001_x264.mp4', loop_at=None):
         self.frames = [
             cv2.imread('frames/Fighting006_x264/' + frame)
             for frame in sorted(os.listdir('frames/Fighting006_x264'))
@@ -13,7 +13,7 @@ class VideoFeed(object):
 
         self.current_frame = -1
 
-        self.loop = True
+        self.loop_at = loop_at
 
         # Using OpenCV to capture from device 0. If you have trouble capturing
         # from a webcam, comment the line below out and use a video file
@@ -25,7 +25,7 @@ class VideoFeed(object):
     #     self.video.release()
 
     def stop_loop(self):
-        self.loop = False
+        self.loop_at = None
 
     def __iter__(self):
         return self
@@ -48,8 +48,8 @@ class VideoFeed(object):
     def __next__(self):
         self.current_frame += 1
 
-        if self.current_frame == 32:
-            if self.loop:
+        if self.loop_at:
+            if self.current_frame == self.loop_at:
                 self.current_frame = 0
 
         if self.current_frame >= len(self.frames):

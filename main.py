@@ -113,7 +113,7 @@ def create_loop_button(video_input):
 
 def start_detecting(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
                     graph_x_size, interesting_objects, fps, precompile, text, use_graph, video, video_name,
-                    video_x_position, video_y_position):
+                    video_x_position, video_y_position, loop_at):
     if max_window < cep_frequency + group_frequency:
         print(
             'The window of events can not be smaller than the sum of the frequency of checking and grouping',
@@ -140,7 +140,10 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     if video:
         initialize_video(video_x_position, video_y_position)
 
-    video_input = VideoFeed(video_file='/home/marc/Videos/UCF_CRIME/Crime/Fighting/{}.mp4'.format(video_name))
+    video_input = VideoFeed(
+        video_file='/home/marc/Videos/UCF_CRIME/Crime/Fighting/{}.mp4'.format(video_name),
+        loop_at=loop_at
+    )
 
     event_generator = EventGenerator(
         [
@@ -159,8 +162,9 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 
     evaluation = {}
 
-    thread1 = threading.Thread(target=create_loop_button, args=(video_input, ))
-    thread1.start()
+    if loop_at:
+        thread1 = threading.Thread(target=create_loop_button, args=(video_input, ))
+        thread1.start()
 
     for i, (video_i, frame) in at_rate(enumerate(video_input), fps):
         if video:
@@ -253,9 +257,13 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 @click.option('--video_name', default=None, help='Name of the video for which we want to perform CEP')
 @click.option('--video_x_position', default=1000, help='X position to spawn the video. Only if video is in use')
 @click.option('--video_y_position', default=200, help='Y position to spawn the video. Only if video is in use')
+@click.option(
+    '--loop_at', default=None, type=int,
+    help='If used, the video will loop at the given number until a button is pressed'
+)
 def main(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
          graph_x_size, interesting_objects, fps, precompile, text, graph, video, video_name, video_x_position,
-         video_y_position):
+         video_y_position, loop_at):
     start_detecting(
         expected_events=expected_events,
         event_definition=event_definition,
@@ -272,7 +280,8 @@ def main(expected_events, event_definition, max_window, cep_frequency, group_siz
         video=video,
         video_name=video_name,
         video_x_position=video_x_position,
-        video_y_position=video_y_position
+        video_y_position=video_y_position,
+        loop_at=loop_at
     )
 
 
