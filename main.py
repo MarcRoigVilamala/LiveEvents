@@ -1,5 +1,6 @@
 import json
 import sys
+import threading
 import time
 
 import cv2
@@ -17,6 +18,8 @@ from eventGeneration.eventGeneration import EventGenerator
 from eventGeneration.fromFileEvents import FromFileEventGenerator
 from graph import Graph
 from videoFeed.videoFeed import VideoFeed
+
+import tkinter as tk
 
 VIDEO_WINDOW_NAME = 'CCTV Feed'
 
@@ -75,6 +78,39 @@ def update_video(frame):
     cv2.waitKey(1)
 
 
+def convert_for_event_generation(relevant_frames, diff):
+    return [
+        (i - diff, frame)
+        for i, frame in relevant_frames
+    ]
+
+
+def convert_after_event_generation(events, diff):
+    return [
+        Event(e.timestamp + diff, e.identifier, e.probability, e.event_type)
+        for e in events
+    ]
+
+
+def create_loop_button(video_input):
+    root = tk.Tk()
+    frame = tk.Frame(root)
+    frame.pack()
+
+    def com():
+        video_input.stop_loop()
+        root.destroy()
+
+    button = tk.Button(
+        frame,
+        text="Start Event",
+        command=com
+    )
+    button.pack(side=tk.LEFT)
+
+    root.mainloop()
+
+
 def start_detecting(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
                     graph_x_size, interesting_objects, fps, precompile, text, use_graph, video, video_name,
                     video_x_position, video_y_position):
@@ -123,7 +159,10 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 
     evaluation = {}
 
-    for i, frame in at_rate(enumerate(video_input), fps):
+    thread1 = threading.Thread(target=create_loop_button, args=(video_input, ))
+    thread1.start()
+
+    for i, (video_i, frame) in at_rate(enumerate(video_input), fps):
         if video:
             update_video(frame)
 
@@ -139,7 +178,15 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
             if len(window) >= group_size:
                 relevant_frames = window[-group_size:]
 
-                events += event_generator.get_events(relevant_frames)
+                # Add the part to update the frame number for event generation
+                relevant_frames = convert_for_event_generation(relevant_frames, i - video_i)
+
+                new_events = event_generator.get_events(relevant_frames)
+
+                # And add the part to convert back into events with the correct id
+                new_events = convert_after_event_generation(new_events, i - video_i)
+
+                events += new_events
 
         # Every cep_frequency frames, run the CEP part with the relevant events
         # The i - max_window >= -1 is for the first iteration, where we do not have all the relevant frames
