@@ -8,6 +8,7 @@ import click
 import numpy as np
 
 from PyProbEC.model import Model
+from connection import Connection
 from preCompilation.PreCompilation import PreCompilationArguments
 from PyProbEC.precompilation import EventQuery
 from eventGeneration.event import Event
@@ -99,7 +100,7 @@ def create_loop_button(video_input):
 
     def com():
         video_input.stop_loop()
-        root.destroy()
+        # root.destroy()
 
     button = tk.Button(
         frame,
@@ -113,7 +114,7 @@ def create_loop_button(video_input):
 
 def start_detecting(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
                     graph_x_size, interesting_objects, fps, precompile, text, use_graph, video, video_name,
-                    video_x_position, video_y_position, loop_at):
+                    video_x_position, video_y_position, loop_at, button, address, port, ce_threshold):
     if max_window < cep_frequency + group_frequency:
         print(
             'The window of events can not be smaller than the sum of the frequency of checking and grouping',
@@ -133,7 +134,7 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 
     # If we are using a graph, create it
     if use_graph:
-        graph = Graph(graph_x_size, expected_events_list)
+        graph = Graph(graph_x_size, expected_events_list, ce_threshold)
     else:
         graph = None
 
@@ -160,11 +161,18 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 
     model = generate_model(event_definition, precompile)
 
+    if address:
+        connection = Connection(address, port)
+    else:
+        connection = None
+
     evaluation = {}
+    complex_events = []
 
     if loop_at:
-        thread1 = threading.Thread(target=create_loop_button, args=(video_input, ))
-        thread1.start()
+        if button:
+            thread1 = threading.Thread(target=create_loop_button, args=(video_input, ))
+            thread1.start()
 
     for i, (video_i, frame) in at_rate(enumerate(video_input), fps):
         if video:
@@ -209,12 +217,25 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
                 input_events=events
             )
 
-            events += Event.from_evaluation(new_evaluation)
+            new_events = Event.from_evaluation(new_evaluation)
+
+            events += new_events
 
             evaluation = update_evaluation(evaluation, new_evaluation)
 
+            new_complex_events = [
+                e
+                for e in new_events
+                if e.probability > ce_threshold
+            ]
+
+            complex_events += new_complex_events
+
             if text:
                 print(new_evaluation)
+
+            if connection:
+                connection.send(new_complex_events)
 
             if graph:
                 graph.update(evaluation)
@@ -261,9 +282,19 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     '--loop_at', default=None, type=int,
     help='If used, the video will loop at the given number until a button is pressed'
 )
+@click.option('--button', is_flag=True, help='Use to create a button to stop the loop')
+@click.option(
+    '--address', default=None, type=str, help='Specify if you want to send messages through ZeroMQ'
+)
+@click.option(
+    '-p', '--port', default=9999, help='Port to use for the ZeroMQ connection'
+)
+@click.option(
+    '--ce_threshold', default=0.01, help='Threshold for above which probability we detect a complex event'
+)
 def main(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
          graph_x_size, interesting_objects, fps, precompile, text, graph, video, video_name, video_x_position,
-         video_y_position, loop_at):
+         video_y_position, loop_at, button, address, port, ce_threshold):
     start_detecting(
         expected_events=expected_events,
         event_definition=event_definition,
@@ -281,7 +312,11 @@ def main(expected_events, event_definition, max_window, cep_frequency, group_siz
         video_name=video_name,
         video_x_position=video_x_position,
         video_y_position=video_y_position,
-        loop_at=loop_at
+        loop_at=loop_at,
+        button=button,
+        address=address,
+        port=port,
+        ce_threshold=ce_threshold
     )
 
 

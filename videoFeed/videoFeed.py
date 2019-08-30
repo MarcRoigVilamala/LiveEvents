@@ -14,6 +14,7 @@ class VideoFeed(object):
         self.current_frame = -1
 
         self.loop_at = loop_at
+        self.was_looping_at = loop_at
 
         # Using OpenCV to capture from device 0. If you have trouble capturing
         # from a webcam, comment the line below out and use a video file
@@ -53,6 +54,8 @@ class VideoFeed(object):
                 self.current_frame = 0
 
         if self.current_frame >= len(self.frames):
-            raise StopIteration()
+            # raise StopIteration()
+            self.current_frame %= len(self.frames)
+            self.loop_at = self.was_looping_at
 
         return self.current_frame, self.frames[self.current_frame]

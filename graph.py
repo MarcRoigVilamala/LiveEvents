@@ -3,8 +3,9 @@ from matplotlib import patches
 
 
 class Graph(object):
-    def __init__(self, graph_x_size, expected_events):
+    def __init__(self, graph_x_size, expected_events, ce_threshold):
         self.graph_x_size = graph_x_size
+        self.ce_threshold = ce_threshold
 
         x = [0, graph_x_size]
         y = [0, 1]
@@ -63,7 +64,7 @@ class Graph(object):
             line.set_ydata(y_data)
 
             for i in range(self.previous_x_data_length, len(x_data)):
-                if y_data[i] > 0.01:
+                if y_data[i] > self.ce_threshold:
                     self.mark_rectangle_until(event, x_data, i)
 
         self.previous_x_data_length = len(x_data)
