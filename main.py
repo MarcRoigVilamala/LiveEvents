@@ -9,6 +9,7 @@ import numpy as np
 
 from PyProbEC.model import Model
 from connection import Connection
+from myHttpReceiver import create_http_reciever
 from preCompilation.PreCompilation import PreCompilationArguments
 from PyProbEC.precompilation import EventQuery
 from eventGeneration.event import Event
@@ -114,7 +115,7 @@ def create_loop_button(video_input):
 
 def start_detecting(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
                     graph_x_size, interesting_objects, fps, precompile, text, use_graph, video, video_name,
-                    video_x_position, video_y_position, loop_at, button, address, port, ce_threshold):
+                    video_x_position, video_y_position, loop_at, button, post_message, address, port, ce_threshold):
     if max_window < cep_frequency + group_frequency:
         print(
             'The window of events can not be smaller than the sum of the frequency of checking and grouping',
@@ -173,6 +174,11 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
         if button:
             thread1 = threading.Thread(target=create_loop_button, args=(video_input, ))
             thread1.start()
+
+        if post_message:
+            thread2 = threading.Thread(target=create_http_reciever, args=(video_input,))
+            thread2.start()
+
 
     for i, (video_i, frame) in at_rate(enumerate(video_input), fps):
         if video:
@@ -283,6 +289,7 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     help='If used, the video will loop at the given number until a button is pressed'
 )
 @click.option('--button', is_flag=True, help='Use to create a button to stop the loop')
+@click.option('--post_message', is_flag=True, help='Use to allow a HTTP POST message to stop the loop')
 @click.option(
     '--address', default=None, type=str, help='Specify if you want to send messages through ZeroMQ'
 )
@@ -294,7 +301,7 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 )
 def main(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
          graph_x_size, interesting_objects, fps, precompile, text, graph, video, video_name, video_x_position,
-         video_y_position, loop_at, button, address, port, ce_threshold):
+         video_y_position, loop_at, button, post_message, address, port, ce_threshold):
     start_detecting(
         expected_events=expected_events,
         event_definition=event_definition,
@@ -314,6 +321,7 @@ def main(expected_events, event_definition, max_window, cep_frequency, group_siz
         video_y_position=video_y_position,
         loop_at=loop_at,
         button=button,
+        post_message=post_message,
         address=address,
         port=port,
         ce_threshold=ce_threshold
