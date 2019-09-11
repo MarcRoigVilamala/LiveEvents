@@ -170,6 +170,9 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     evaluation = {}
     complex_events = []
 
+    last_complex_event = []
+    current_complex_event = []
+
     if loop_at:
         if button:
             thread1 = threading.Thread(target=create_loop_button, args=(video_input, ))
@@ -178,9 +181,6 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
         if post_message:
             thread2 = threading.Thread(target=create_http_reciever, args=(video_input,))
             thread2.start()
-
-    was_in_event = False
-    in_event = False
 
     for i, (video_i, frame) in at_rate(enumerate(video_input), fps):
         if video:
@@ -237,8 +237,11 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
                 if e.probability > ce_threshold
             ]
 
-            was_in_event = in_event
-            in_event = bool(new_complex_events)
+            if new_complex_events:
+                current_complex_event += new_complex_events
+            else:
+                last_complex_event = current_complex_event
+                current_complex_event = []
 
             complex_events += new_complex_events
 
@@ -246,18 +249,18 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
                 print(new_evaluation)
 
             if connection:
-                if not in_event and was_in_event:
+                if not new_complex_events and last_complex_event:
                     max_prob = max(
                         [
                             ce.probability
-                            for ce in complex_events
+                            for ce in last_complex_event
                             if ce.identifier.split(' = ')[0] == 'videoAndObjDet'
                         ]
                     )
 
                     the_complex_event = [
                         ce
-                        for ce in complex_events
+                        for ce in last_complex_event
                         if ce.identifier.split(' = ')[0] == 'videoAndObjDet' and ce.probability == max_prob
                     ][0]
 
