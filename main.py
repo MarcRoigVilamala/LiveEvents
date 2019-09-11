@@ -179,6 +179,8 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
             thread2 = threading.Thread(target=create_http_reciever, args=(video_input,))
             thread2.start()
 
+    was_in_event = False
+    in_event = False
 
     for i, (video_i, frame) in at_rate(enumerate(video_input), fps):
         if video:
@@ -235,13 +237,41 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
                 if e.probability > ce_threshold
             ]
 
+            was_in_event = in_event
+            in_event = bool(new_complex_events)
+
             complex_events += new_complex_events
 
             if text:
                 print(new_evaluation)
 
             if connection:
-                connection.send(new_complex_events)
+                if not in_event and was_in_event:
+                    max_prob = max(
+                        [
+                            ce.probability
+                            for ce in complex_events
+                            if ce.identifier.split(' = ')[0] == 'videoAndObjDet'
+                        ]
+                    )
+
+                    the_complex_event = [
+                        ce
+                        for ce in complex_events
+                        if ce.identifier.split(' = ')[0] == 'videoAndObjDet' and ce.probability == max_prob
+                    ][0]
+
+                    connection.send(
+                        [the_complex_event]
+                    )
+
+                    # connection.send(
+                    #     [
+                    #         ce
+                    #         for ce in new_complex_events
+                    #         if ce.identifier.split(' = ')[0] == 'videoAndObjDet' and ce.probability == max_prob
+                    #     ]
+                    # )
 
             if graph:
                 graph.update(evaluation)
