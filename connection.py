@@ -1,4 +1,7 @@
+import pickle
+
 import zmq
+from syncClock import now
 
 
 class Connection(object):
@@ -6,19 +9,19 @@ class Connection(object):
         context = zmq.Context.instance()
 
         self.socket = context.socket(zmq.PUB)
-        self.socket.bind("tcp://{}:{}".format(address, port))
+        self.socket.connect("tcp://{}:{}".format(address, port))
         # self.socket.bind("tcp://*:{}".format(port))
+
+        # Initialize the connection for the timestamp
+        now()
 
     def send(self, complex_events):
         for ce in complex_events:
+            message = pickle.dumps(['fight', 'VIOLENCE', now(), ce.probability])
+
             self.socket.send_multipart(
                 [
-                    "{topic}".format(topic='cam1-inference').encode(),
-                    "{label}; {confidence}; {sensorId}; {timestamp}".format(
-                        label=ce.identifier.split(' = ')[0],
-                        confidence=ce.probability,
-                        sensorId='1',
-                        timestamp=ce.timestamp
-                    ).encode()
+                    "{topic}".format(topic='VIOLENCE').encode(),
+                    message
                 ]
             )
