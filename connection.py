@@ -17,6 +17,8 @@ class Connection(object):
 
     def send(self, complex_events):
         for ce in complex_events:
+            print('Sending a fight event with probability {}'.format(ce.probability))
+
             message = pickle.dumps(['fight', 'VIOLENCE', now(), ce.probability])
 
             self.socket.send_multipart(

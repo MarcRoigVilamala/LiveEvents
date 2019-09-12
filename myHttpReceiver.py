@@ -16,7 +16,7 @@ def create_http_reciever(video_input, server_class=HTTPServer, port=8080):
             video_input.stop_loop()
             self._set_headers()
 
-    server_address = ('', port)
+    server_address = ('192.168.8.229', port)
     httpd = server_class(server_address, MyHTTPReceiver)
 
     httpd.serve_forever()
