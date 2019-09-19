@@ -55,7 +55,7 @@ def at_rate(iterable, rate):
         yield v
 
 
-def generate_model(event_definition, precompile):
+def generate_model(event_definition, precompile, semiring=None):
     if precompile:
         with open(precompile, 'r') as f:
             json_precompile = json.load(f)
@@ -65,9 +65,9 @@ def generate_model(event_definition, precompile):
             queries=[EventQuery(**q) for q in json_precompile['queries']]
         )
 
-        return Model([event_definition], precomp_args)
+        return Model([event_definition], precomp_args, semiring)
     else:
-        return Model([event_definition])
+        return Model([event_definition], semiring=semiring)
 
 
 def initialize_video(x, y):

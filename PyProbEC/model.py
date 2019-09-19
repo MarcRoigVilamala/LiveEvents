@@ -19,7 +19,7 @@ PROBLOG_FILES = [
 
 
 class Model(object):
-    def __init__(self, event_definition_files=(), precompile_arguments=None):
+    def __init__(self, event_definition_files=(), precompile_arguments=None, semiring=None):
         # The base model will be formed from the base ProbLog files that define EC
         # and the files given by the user that should define the rules for the
         # complex event they are trying to detect
@@ -30,8 +30,10 @@ class Model(object):
 
         self.model = '\n\n'.join(models)
 
+        self.semiring = semiring
+
         if precompile_arguments:
-            self.precompilation = EventPreCompilation(precompile_arguments, self.model)
+            self.precompilation = EventPreCompilation(precompile_arguments, self.model, semiring)
         else:
             self.precompilation = None
 
@@ -52,11 +54,11 @@ class Model(object):
     def get_timestamps(self):
         model = PrologString(self.model + '\n\nquery(allTimeStamps(TPs)).')
 
-        knowledge = get_evaluatable().create_from(model)
+        knowledge = get_evaluatable(semiring=self.semiring).create_from(model, semiring=self.semiring)
 
         timestamps = [
             term_to_list(term.args[0])
-            for term in knowledge.evaluate().keys()
+            for term in knowledge.evaluate(semiring=self.semiring).keys()
             if term.functor == 'allTimeStamps'
         ]
 
@@ -79,9 +81,13 @@ class Model(object):
 
                 model = PrologString(string_model + '\n' + updated_knowledge + '\n' + query)
 
-                knowledge = get_evaluatable(name='ddnnf').create_from(model, semiring=SemiringSymbolic())
+                knowledge = get_evaluatable(
+                    name='ddnnf', semiring=self.semiring
+                ).create_from(
+                    model, semiring=self.semiring
+                )
 
-                evaluation = knowledge.evaluate()
+                evaluation = knowledge.evaluate(semiring=self.semiring)
 
                 res.update(evaluation)
 

@@ -8,13 +8,13 @@ from eventGeneration.event import Event
 
 
 class EventPreCompilation(PreCompilation):
-    def __init__(self, precomp_args, model):
+    def __init__(self, precomp_args, model, semiring=None):
         all_timestamps = {e.timestamp for e in precomp_args.input_clauses}
         all_timestamps = all_timestamps.union({q.timestamp for q in precomp_args.queries})
 
         model += '\nallTimeStamps([{}]).'.format(', '.join(map(str, sorted(list(all_timestamps)))))
 
-        super(EventPreCompilation, self).__init__(precomp_args, model)
+        super(EventPreCompilation, self).__init__(precomp_args, model, semiring)
 
     def get_values_for(self, query_timestamps, expected_events, input_events=()):
         res = {}
