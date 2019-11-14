@@ -22,6 +22,7 @@ from graph import Graph
 from videoFeed.videoFeed import VideoFeed
 
 import tkinter as tk
+import pandas as pd
 
 VIDEO_WINDOW_NAME = 'CCTV Feed'
 
@@ -75,8 +76,17 @@ def initialize_video(x, y):
     cv2.moveWindow(VIDEO_WINDOW_NAME, x, y)
 
 
-def update_video(frame):
-    cv2.imshow(VIDEO_WINDOW_NAME, frame)
+def update_video(frame, scale=None):
+    if scale is not None:
+        width = int(frame.shape[1] * scale)
+        height = int(frame.shape[0] * scale)
+        dim = (width, height)
+
+        resized = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
+    else:
+        resized = frame
+
+    cv2.imshow(VIDEO_WINDOW_NAME, resized)
     cv2.waitKey(1)
 
 
@@ -113,9 +123,29 @@ def create_loop_button(video_input):
     root.mainloop()
 
 
+def add_objects_to_frame(frame, objects_detected, video_i):
+    for i, obj in objects_detected[objects_detected['time'] == video_i].iterrows():
+        # Should be this but labels on the csv are wrong
+        cv2.rectangle(frame, (obj['x1'], obj['y1']), (obj['x2'], obj['y2']), (255, 0, 0), 2)
+        # cv2.rectangle(frame, (obj['x1'], obj['x2']), (obj['y1'], obj['y2']), (0, 0, 255), 2)
+
+        cv2.putText(
+            frame,
+            obj['class'],
+            (obj['x1'], obj['y1']),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.75,
+            (0, 0, 255),
+            1
+        )
+
+    return frame
+
+
 def start_detecting(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
                     graph_x_size, interesting_objects, fps, precompile, text, use_graph, video, video_name,
-                    video_x_position, video_y_position, loop_at, button, post_message, address, port, ce_threshold):
+                    video_x_position, video_y_position, loop_at, button, post_message, address, port, ce_threshold,
+                    video_scale, object_mark):
     if max_window < cep_frequency + group_frequency:
         print(
             'The window of events can not be smaller than the sum of the frequency of checking and grouping',
@@ -142,8 +172,10 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     if video:
         initialize_video(video_x_position, video_y_position)
 
+    video_class = video_name[:-8]
+
     video_input = VideoFeed(
-        video_file='/home/marc/Videos/UCF_CRIME/Crime/Fighting/{}.mp4'.format(video_name),
+        video_file='/home/marc/Videos/UCF_CRIME/Crime/{}/{}.mp4'.format(video_class, video_name),
         loop_at=loop_at
     )
 
@@ -151,11 +183,37 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
         [
             # ObjectDetectorEventGenerator(interesting_objects_list),
             # VideoEventGenerator()
-            FromFileEventGenerator('ProbLogEvents/Fighting/3DResNet/{}.pl'.format(video_name)),
-            FromFileEventGenerator('ProbLogEvents/Fighting/AtLeast/{}.pl'.format(video_name)),
-            FromFileEventGenerator('ProbLogEvents/Fighting/Overlapping/{}.pl'.format(video_name))
+            FromFileEventGenerator('ProbLogEvents/{}/3DResNet/{}.pl'.format(video_class, video_name)),
+            FromFileEventGenerator('ProbLogEvents/{}/AtLeast/{}.pl'.format(video_class, video_name)),
+            FromFileEventGenerator('ProbLogEvents/{}/Overlapping/{}.pl'.format(video_class, video_name))
         ]
     )
+
+    if object_mark:
+        objects_detected = pd.read_csv(
+            'ObjectDetection/{}.csv'.format(video_name),
+            delimiter=','
+        )
+
+        pad_x = 104.0
+        pad_y = 0.0
+        unpad_h = 416.0
+        unpad_w = 312.0
+        img_shape = (320, 240)
+
+        print(objects_detected)
+        objects_detected['box_h'] = ((objects_detected['y2'] - objects_detected['y1']) / unpad_h) * img_shape[0]
+        objects_detected['box_w'] = ((objects_detected['x2'] - objects_detected['x1']) / unpad_w) * img_shape[1]
+        objects_detected['y1'] = objects_detected['y1'].apply(lambda y1: ((y1 - pad_y // 2) / unpad_h) * img_shape[0])
+        objects_detected['x1'] = objects_detected['x1'].apply(lambda x1: ((x1 - pad_x // 2) / unpad_w) * img_shape[1])
+        objects_detected['x2'] = objects_detected['x1'] + objects_detected['box_w']
+        objects_detected['y2'] = objects_detected['y1'] + objects_detected['box_h']
+
+        for col in ['x1', 'x2', 'y1', 'y2']:
+            objects_detected[col] = objects_detected[col].apply(int)
+        print(objects_detected)
+    else:
+        objects_detected = None
 
     window = []
     events = []
@@ -183,8 +241,15 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
             thread2.start()
 
     for i, (video_i, frame) in at_rate(enumerate(video_input), fps):
+        # if i > 8008:
+        #     break
         if video:
-            update_video(frame)
+            if objects_detected is not None:
+                showing_frame = add_objects_to_frame(frame, objects_detected, video_i)
+            else:
+                showing_frame = frame
+
+            update_video(showing_frame, scale=video_scale)
 
         # Keep only the number of frames we need
         window.append((i, frame))
@@ -332,9 +397,15 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 @click.option(
     '--ce_threshold', default=0.01, help='Threshold for above which probability we detect a complex event'
 )
+@click.option(
+    '--video_scale', default=1.0, help='Scale of the video'
+)
+@click.option(
+    '--object_mark', is_flag=True, help='If used, objects will be marked in the video'
+)
 def main(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
          graph_x_size, interesting_objects, fps, precompile, text, graph, video, video_name, video_x_position,
-         video_y_position, loop_at, button, post_message, address, port, ce_threshold):
+         video_y_position, loop_at, button, post_message, address, port, ce_threshold, video_scale, object_mark):
     start_detecting(
         expected_events=expected_events,
         event_definition=event_definition,
@@ -357,7 +428,9 @@ def main(expected_events, event_definition, max_window, cep_frequency, group_siz
         post_message=post_message,
         address=address,
         port=port,
-        ce_threshold=ce_threshold
+        ce_threshold=ce_threshold,
+        video_scale=video_scale,
+        object_mark=object_mark
     )
 
 
