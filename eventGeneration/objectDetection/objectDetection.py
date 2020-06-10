@@ -22,7 +22,7 @@ class ObjectDetectorEventGenerator(object):
         for i, frame in enumerated_frames:
             detection = detect_image(frame)
 
-            res[i] = parse_results(detection)
+            res[i] = parse_results(detection, frame)
 
         return res
 

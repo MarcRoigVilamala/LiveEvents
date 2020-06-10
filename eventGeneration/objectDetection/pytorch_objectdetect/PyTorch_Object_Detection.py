@@ -61,18 +61,33 @@ def detect_image(img):
     return detections[0]
 
 
-def parse_results(results):
+def get_bounding_box(l, img):
+    res = {
+        'x1': int(l[0]),
+        'y1': int(l[1]),
+        'x2': int(l[2]),
+        'y2': int(l[3]),
+    }
+
+    pad_x, pad_y, unpad_h, unpad_w = get_pads(img)
+
+    box_h = ((res['y2'] - res['y1']) / unpad_h) * img.shape[0]
+    box_w = ((res['x2'] - res['x1']) / unpad_w) * img.shape[1]
+    res['y1'] = ((res['y1'] - pad_y // 2) / unpad_h) * img.shape[0]
+    res['x1'] = ((res['x1'] - pad_x // 2) / unpad_w) * img.shape[1]
+    res['y2'] = res['x1'] + box_h
+    res['x2'] = res['x1'] + box_w
+
+    return res
+
+
+def parse_results(results, img):
     if results is None:
         return []
 
     return [
         {
-            'bounding_box': {
-                'x1': int(l[0]),
-                'x2': int(l[1]),
-                'y1': int(l[2]),
-                'y2': int(l[3]),
-            },
+            'bounding_box': get_bounding_box(l, img),
             'mask': None,
             'class': classes[int(l[6])],
             'score': l[5]
@@ -81,32 +96,38 @@ def parse_results(results):
     ]
 
 
+def get_pads(img):
+    pad_x = max(img.shape[0] - img.shape[1], 0) * (img_size / max(img.shape))
+    pad_y = max(img.shape[1] - img.shape[0], 0) * (img_size / max(img.shape))
+    unpad_h = img_size - pad_y
+    unpad_w = img_size - pad_x
+
+    return pad_x, pad_y, unpad_h, unpad_w
+
+
 # In[5]:
 
-if __name__ == "__main__":
+def main():
     # load image and get detections
     img_path = "/home/roigvilamalam/scratch/projects/interestFiltering/objectExtraction/frames/frame265.jpg"
     prev_time = time.time()
     img = Image.open(img_path)
     detections = detect_image(img)
     inference_time = datetime.timedelta(seconds=time.time() - prev_time)
-    print ('Inference Time: %s' % (inference_time))
+    print('Inference Time: %s' % (inference_time))
     print(detections.data.cpu().numpy())
-    
+
     # Get bounding-box colors
     cmap = plt.get_cmap('tab20b')
     colors = [cmap(i) for i in np.linspace(0, 1, 20)]
-    
+
     img = np.array(img)
     plt.figure()
-    fig, ax = plt.subplots(1, figsize=(12,9))
+    fig, ax = plt.subplots(1, figsize=(12, 9))
     ax.imshow(img)
-    
-    pad_x = max(img.shape[0] - img.shape[1], 0) * (img_size / max(img.shape))
-    pad_y = max(img.shape[1] - img.shape[0], 0) * (img_size / max(img.shape))
-    unpad_h = img_size - pad_y
-    unpad_w = img_size - pad_x
-    
+
+    pad_x, pad_y, unpad_h, unpad_w = get_pads(img)
+
     if detections is not None:
         unique_labels = detections[:, -1].cpu().unique()
         n_cls_preds = len(unique_labels)
@@ -121,12 +142,15 @@ if __name__ == "__main__":
             bbox = patches.Rectangle((x1, y1), box_w, box_h, linewidth=2, edgecolor=color, facecolor='none')
             ax.add_patch(bbox)
             plt.text(x1, y1, s=classes[int(cls_pred)], color='white', verticalalignment='top',
-                    bbox={'color': color, 'pad': 0})
+                     bbox={'color': color, 'pad': 0})
     plt.axis('off')
     # save image
     plt.savefig(img_path.replace(".jpg", "-det.jpg"), bbox_inches='tight', pad_inches=0.0)
     plt.show()
-    
+
+
+if __name__ == "__main__":
+    main()
 
 # In[ ]:
 

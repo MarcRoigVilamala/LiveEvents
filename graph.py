@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 from matplotlib import patches
+from matplotlib.animation import FFMpegFileWriter
 
 
 class Graph(object):
-    def __init__(self, graph_x_size, expected_events, ce_threshold):
+    def __init__(self, graph_x_size, expected_events, ce_threshold, save_graph_to=None):
         self.graph_x_size = graph_x_size
         self.ce_threshold = ce_threshold
 
@@ -28,6 +29,12 @@ class Graph(object):
         self.last_rectangle = {}
 
         plt.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0))
+
+        if save_graph_to:
+            self.graph_writer = FFMpegFileWriter(fps=29)
+            self.graph_writer.setup(self.fig, save_graph_to, 100)
+        else:
+            self.graph_writer = None
 
     def add_rectangle(self, event, x1, x2):
         return self.ax.add_patch(patches.Rectangle((x1, -1), x2 - x1, 3, color=self.colors[event], alpha=0.3))
@@ -71,3 +78,11 @@ class Graph(object):
 
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+
+        if self.graph_writer:
+            for _ in range(8):
+                self.graph_writer.grab_frame()
+
+    def close(self):
+        if self.graph_writer:
+            self.graph_writer.finish()
