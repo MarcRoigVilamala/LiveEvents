@@ -145,7 +145,7 @@ def add_objects_to_frame(frame, objects_detected, video_i):
 def start_detecting(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
                     graph_x_size, interesting_objects, fps, precompile, text, use_graph, video, video_name,
                     video_x_position, video_y_position, loop_at, button, post_message, address, port, ce_threshold,
-                    video_scale, object_mark):
+                    video_scale, object_mark, save_graph_to):
     if max_window < cep_frequency + group_frequency:
         print(
             'The window of events can not be smaller than the sum of the frequency of checking and grouping',
@@ -164,8 +164,8 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
             interesting_objects_list = [l.strip() for l in f]
 
     # If we are using a graph, create it
-    if use_graph:
-        graph = Graph(graph_x_size, expected_events_list, ce_threshold)
+    if use_graph or save_graph_to:
+        graph = Graph(graph_x_size, expected_events_list, ce_threshold, save_graph_to)
     else:
         graph = None
 
@@ -350,6 +350,9 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
     if use_graph:
         input('Press enter to finish')
 
+    if graph:
+        graph.close()
+
     cv2.destroyAllWindows()
 
 
@@ -403,9 +406,13 @@ def start_detecting(expected_events, event_definition, max_window, cep_frequency
 @click.option(
     '--object_mark', is_flag=True, help='If used, objects will be marked in the video'
 )
+@click.option(
+    '--save_graph_to', type=click.Path(file_okay=True, dir_okay=False, writable=True)
+)
 def main(expected_events, event_definition, max_window, cep_frequency, group_size, group_frequency,
          graph_x_size, interesting_objects, fps, precompile, text, graph, video, video_name, video_x_position,
-         video_y_position, loop_at, button, post_message, address, port, ce_threshold, video_scale, object_mark):
+         video_y_position, loop_at, button, post_message, address, port, ce_threshold, video_scale, object_mark,
+         save_graph_to):
     start_detecting(
         expected_events=expected_events,
         event_definition=event_definition,
@@ -430,7 +437,8 @@ def main(expected_events, event_definition, max_window, cep_frequency, group_siz
         port=port,
         ce_threshold=ce_threshold,
         video_scale=video_scale,
-        object_mark=object_mark
+        object_mark=object_mark,
+        save_graph_to=save_graph_to
     )
 
 
