@@ -4,9 +4,10 @@ from matplotlib.animation import FFMpegFileWriter
 
 
 class Graph(object):
-    def __init__(self, graph_x_size, expected_events, ce_threshold, save_graph_to=None):
+    def __init__(self, graph_x_size, expected_events, ce_threshold, save_graph_to=None, use_rectangles=True):
         self.graph_x_size = graph_x_size
         self.ce_threshold = ce_threshold
+        self.use_rectangles = use_rectangles
 
         x = [0, graph_x_size]
         y = [0, 1]
@@ -14,9 +15,11 @@ class Graph(object):
         # You probably won't need this if you're embedding things in a tkinter plot...
         plt.ion()
 
-        self.fig = plt.figure()
+        self.fig = plt.figure(figsize=(16, 9))
         self.ax = self.fig.add_subplot(1, 1, 1)
 
+        # Keeps track of which line and color is used for each complex event, to allow updating the lines and creating
+        # rectangles of the same color (if the option is active)
         self.lines = {}
         self.colors = {}
         for event in expected_events:
@@ -28,11 +31,14 @@ class Graph(object):
 
         self.last_rectangle = {}
 
-        plt.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0))
+        plt.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=3)
+        plt.xlabel('Time (s)')
+        plt.ylabel('Confidence')
 
         if save_graph_to:
-            self.graph_writer = FFMpegFileWriter(fps=29)
-            self.graph_writer.setup(self.fig, save_graph_to, 100)
+            self.graph_writer = FFMpegFileWriter(fps=1)
+            # self.graph_writer.setup(self.fig, save_graph_to, 100)
+            self.graph_writer.setup(self.fig, save_graph_to)
         else:
             self.graph_writer = None
 
@@ -70,9 +76,10 @@ class Graph(object):
             line.set_xdata(x_data)
             line.set_ydata(y_data)
 
-            for i in range(self.previous_x_data_length, len(x_data)):
-                if y_data[i] > self.ce_threshold:
-                    self.mark_rectangle_until(event, x_data, i)
+            if self.use_rectangles:
+                for i in range(self.previous_x_data_length, len(x_data)):
+                    if y_data[i] > self.ce_threshold:
+                        self.mark_rectangle_until(event, x_data, i)
 
         self.previous_x_data_length = len(x_data)
 
@@ -80,8 +87,8 @@ class Graph(object):
         self.fig.canvas.flush_events()
 
         if self.graph_writer:
-            for _ in range(8):
-                self.graph_writer.grab_frame()
+            # for _ in range(8):
+            self.graph_writer.grab_frame()
 
     def close(self):
         if self.graph_writer:
