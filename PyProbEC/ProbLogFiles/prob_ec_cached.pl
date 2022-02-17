@@ -1,4 +1,4 @@
-:- use_module('PyProbEC/ProbLogFiles/in_out.py').
+%:- use_module('PyProbEC/ProbLogFiles/in_out.py').
 % PROLOG-INDEPENDENT
 
 holdsAt_(aux = true, 0).
@@ -37,5 +37,9 @@ broken(F = V, T1, T2) :-
   T3 > T1,
   broken(F = V, T1, T3).
 
-%previousTimeStamp(T, Timestamps, Tprev):- Tprev is T - 8.
-%nextTimeStamp(T, Timestamps, Tnext):- Tnext is T + 8.
+previousTimeStampN(T, Timestamps, T, 0).
+previousTimeStampN(T, Timestamps, TprevN, S) :-
+    S > 0,
+    previousTimeStamp(T, Timestamps, Tprev),
+    S2 is S - 1,
+    previousTimeStampN(Tprev, Timestamps, TprevN, S2).

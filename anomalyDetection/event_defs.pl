@@ -1,3 +1,5 @@
+atTime(-1, -1).
+
 initiatedAt(videoOnly = true, T) :-
     happensAt(something, T),
     allTimeStamps(Timestamps),

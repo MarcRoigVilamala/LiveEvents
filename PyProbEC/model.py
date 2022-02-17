@@ -13,10 +13,6 @@ from PyProbEC.precompilation import EventPreCompilation
 from PyProbEC.utils import unsorted_groupby, term_to_list, get_values
 from eventGeneration.event import Event
 
-PROBLOG_FILES = [
-    'PyProbEC/ProbLogFiles/prob_ec_cached.pl',
-]
-
 
 class Model(object):
     def __init__(self, event_definition_files=(), precompile_arguments=None):
@@ -25,7 +21,7 @@ class Model(object):
         # complex event they are trying to detect
         models = [
             self.read_model(m)
-            for m in PROBLOG_FILES + event_definition_files
+            for m in event_definition_files
         ]
 
         self.model = '\n\n'.join(models)
@@ -79,7 +75,7 @@ class Model(object):
 
                 model = PrologString(string_model + '\n' + updated_knowledge + '\n' + query)
 
-                knowledge = get_evaluatable(name='ddnnf').create_from(model, semiring=SemiringSymbolic())
+                knowledge = get_evaluatable().create_from(model, semiring=SemiringSymbolic())
 
                 evaluation = knowledge.evaluate()
 
@@ -123,5 +119,5 @@ class Model(object):
             with open(m) as f:
                 return f.read()
         else:
-            print('{} not found'.format(m), file=sys.stderr)
+            print('\033[93m{} not found\033[0m'.format(m), file=sys.stderr)
             return '\n'
