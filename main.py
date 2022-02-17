@@ -450,13 +450,13 @@ def create_event_generator(event_generator_types, interesting_objects, video_cla
         #     event_gen = ObjectDetectorEventGenerator(interesting_objects_list)
         # elif event_gen_type == 'Video':
         #     event_gen = VideoEventGenerator()
-        elif event_gen_type == 'DemoFromAudioNN':
-            event_gen = DemoFromAudioNN(
-                [
-                    (i, '/home/marc/demos/AFM2020/VGGish/CutBang_edited_{}.pt'.format(i))
-                    for i in range(20)
-                ]
-            )
+        # elif event_gen_type == 'DemoFromAudioNN':
+        #     event_gen = DemoFromAudioNN(
+        #         [
+        #             (i, '/home/marc/demos/AFM2020/VGGish/CutBang_edited_{}.pt'.format(i))
+        #             for i in range(20)
+        #         ]
+        #     )
         elif event_gen_type == 'FromAudioNN':
             classes = [
                 'airConditioner',
@@ -549,7 +549,7 @@ def create_input_feed(input_feed_type, audio_file, loop_at, video_class, video_n
             'Video',
             'FromAudioNN',
             'FromLiveAudioNN',
-            'DemoFromAudioNN'
+            # 'DemoFromAudioNN'
         ]
     ),
     help='Event generators process the input feed each iteration and extract the events from it'
@@ -572,7 +572,10 @@ def create_input_feed(input_feed_type, audio_file, loop_at, video_class, video_n
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help='File defining the list of objects we care about from the object detector output'
 )
-@click.option('--fps', default=30.0, help='Number of frames that are processed every second')
+@click.option(
+    '--fps', default=30.0,
+    help='Number of frames that are processed every second. Controls the speed at which the program processes the feed'
+)
 @click.option(
     '--precompile', default=None, type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help='JSON file defining the inputs and outputs for which we can use precompilation'
@@ -585,7 +588,9 @@ def create_input_feed(input_feed_type, audio_file, loop_at, video_class, video_n
     help='If used, a clean live text will be printed with the values of the different complex events. '
          'This will only include complex events with a confidence above the threshold'
 )
-@click.option('--timings', is_flag=True, help='If used, the system will output')
+@click.option(
+    '--timings', is_flag=True, help='If used, the system will output messages indicating the time performance'
+)
 @click.option(
     '--graph', is_flag=True,
     help='If used, a live graph will be generated showing the values of the different complex events'
