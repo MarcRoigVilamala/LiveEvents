@@ -515,8 +515,8 @@ def create_input_feed(input_feed_type, audio_file, loop_at, video_class, video_n
         if LiveAudioFeed is None:
             raise Exception("LiveAudioFeed cannot be used as it could not be imported. Make sure pyaudio is installed")
         input_feed = LiveAudioFeed()
-    elif input_feed_type == 'DemoAudioFeed':
-        input_feed = DemoAudioFeed()
+    # elif input_feed_type == 'DemoAudioFeed':
+    #     input_feed = DemoAudioFeed()
     else:
         raise ValueError("Unexpected value for INPUT_FEED_TYPE: {}".format(input_feed_type))
     return input_feed
@@ -526,7 +526,12 @@ def create_input_feed(input_feed_type, audio_file, loop_at, video_class, video_n
 @click.argument('expected_events', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
 @click.argument('event_definition', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
 @click.argument(
-    'input_feed_type', type=click.Choice(['VideoFeed', 'LiveAudioFeed', 'AudioFeed', 'DemoAudioFeed']),
+    'input_feed_type', type=click.Choice([
+        'VideoFeed',
+        'LiveAudioFeed',
+        'AudioFeed',
+        # 'DemoAudioFeed'
+    ]),
     # input_feed_type should represent the type of input stream being used
 )
 @click.option(
