@@ -1,7 +1,7 @@
 import pickle
 
 import zmq
-from syncClock import now
+from Connections.syncClock import now
 
 
 class Connection(object):
