@@ -22,7 +22,11 @@ class VideoFeed(object):
         # from a webcam, comment the line below out and use a video file
         # instead.
         # self.video = cv2.VideoCapture(0)
-        self.video = cv2.VideoCapture(video_file)
+        filepath = os.path.expanduser(video_file)
+        if not os.path.exists(filepath):
+            raise ValueError("The file {} does not exist".format(filepath))
+
+        self.video = cv2.VideoCapture(filepath)
 
     # def __del__(self):
     #     self.video.release()
