@@ -15,30 +15,29 @@ import numpy as np
 import torch
 
 try:
-    from Connections.sue import SUEConnection
+    from output.sue import SUEConnection
 except ImportError:
     SUEConnection = None
-from PyProbEC.model import Model
-from Connections.connection import Connection
+from ProbCEP.model import Model
+from output.connection_output.connection import Connection
 try:
-    from feed.liveAudioFeed import LiveAudioFeed
+    from input.feed.liveAudioFeed import LiveAudioFeed
 except ImportError:
     LiveAudioFeed = None
-from feed.audioFeed import AudioFeed
-from feed.demoAudioFeed import DemoAudioFeed
-from feed.videoFeed import VideoFeed
-from myHttpReceiver import create_http_reciever
+from input.feed.audioFeed import AudioFeed
+from input.feed.videoFeed import VideoFeed
+from input.myHttpReceiver import create_http_reciever
 from preCompilation.PreCompilation import PreCompilationArguments
-from PyProbEC.precompilation import EventQuery
-from eventGeneration.event import Event
-from eventGeneration.eventGeneration import EventGenerator
-from eventGeneration.fromFileEvents import FromFileEventGenerator
-from eventGeneration.fromAudioNN import FromAudioNN, DemoFromAudioNN, SoundVGGish
+from ProbCEP.precompilation import EventQuery
+from input.eventGeneration.event import Event
+from input.eventGeneration.eventGeneration import EventGenerator
+from input.eventGeneration.fromFileEvents import FromFileEventGenerator
+from input.eventGeneration.fromAudioNN import FromAudioNN, SoundVGGish
 try:
-    from eventGeneration.Neuroplytorch.fromAudioNeuroplytorch import generate_audio_neuroplytorch_event_gen
+    from input.eventGeneration.Neuroplytorch.fromAudioNeuroplytorch import generate_audio_neuroplytorch_event_gen
 except ImportError:
     generate_audio_neuroplytorch_event_gen = None
-from graph import Graph
+from output.graph import Graph
 
 import tkinter as tk
 import pandas as pd

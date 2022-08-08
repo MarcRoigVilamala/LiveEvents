@@ -1,8 +1,8 @@
 import pandas as pd
 
-from eventGeneration.event import Event
-from eventGeneration.objectDetection.pytorch_objectdetect.PyTorch_Object_Detection import detect_image, parse_results
-from eventGeneration.translations.objects2average import count_beta as average_count_beta
+from input.eventGeneration.event import Event
+from input.eventGeneration.objectDetection.pytorch_objectdetect.PyTorch_Object_Detection import detect_image, parse_results
+from input.eventGeneration.translations.objects2average import count_beta as average_count_beta
 
 
 class ObjectDetectorEventGenerator(object):

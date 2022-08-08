@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from eventGeneration.event import Event
+from input.eventGeneration.event import Event
 
 
 class SoundVGGish(nn.Module):

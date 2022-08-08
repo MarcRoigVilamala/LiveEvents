@@ -9,9 +9,9 @@ import sys
 
 
 # Files that define how EC works
-from PyProbEC.precompilation import EventPreCompilation
-from PyProbEC.utils import unsorted_groupby, term_to_list, get_values
-from eventGeneration.event import Event
+from ProbCEP.precompilation import EventPreCompilation
+from ProbCEP.utils import unsorted_groupby, term_to_list, get_values
+from input.eventGeneration.event import Event
 
 
 class Model(object):

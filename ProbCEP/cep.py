@@ -2,7 +2,7 @@ import time
 from matplotlib import pyplot as plt
 from matplotlib import patches
 
-from PyProbEC.model import Model
+from ProbCEP.model import Model
 
 NUMBER_EXECUTIONS = 5
 
@@ -17,7 +17,7 @@ EVENT_NAMES = {
 
 def get_evaluation(existing_timestamps, query_timestamps, expected_events, input_events=()):
     event_definition_files = [
-        'anomalyDetection/event_defs.pl',
+        'rules/event_defs.pl',
     ]
 
     model = Model(event_definition_files)

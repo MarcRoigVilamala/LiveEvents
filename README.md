@@ -131,7 +131,7 @@ These are other options that may be used that don't fall into any of the classif
 ## Execution Examples
 
 ````
-python main.py anomalyDetection/thesisAudio/expected_events.txt anomalyDetection/thesisAudio/event_defs.pl AudioFeed --add_to_model anomalyDetection/thesisAudio/prevTimestamp.pl --add_to_model PyProbEC/ProbLogFiles/prob_ec_cached.pl --add_to_model PyProbEC/ProbLogFiles/sequence.pl --add_event_generator FromAudioNN --audio_file /home/marc/thesis/audios/demo_audio_base.wav --fps 9999 --text --cep_frequency 1 --group_size 5 --group_frequency 1 --precompile anomalyDetection/thesisAudio/thesisAudio_precompile_args.json
+python main.py rules/worryingSirenDemo/all_events.txt rules/worryingSirenDemo/event_defs.pl AudioFeed --add_to_model rules/worryingSirenDemo/prevTimestamp.pl --add_to_model ProbCEP/ProbLogFiles/prob_ec_cached.pl --add_to_model ProbCEP/ProbLogFiles/sequence.pl --add_event_generator FromAudioNN --audio_file ~/thesis/audios/demo_audio_gunshots.wav --fps 9999 --text --cep_frequency 1 --group_size 1 --group_frequency 1 --precompile rules/worryingSirenDemo/worryingSiren_precompile_args.json --graph
 ````
 
 
@@ -140,5 +140,5 @@ python main.py anomalyDetection/expected_events.txt anomalyDetection/event_defs.
 ````
 
 <!---
-``python main.py anomalyDetection/expected_events.txt anomalyDetection/event_defs.pl --graph_x_size 500 -o anomalyDetection/interesting_objects.txt --precompile anomalyDetection/full_precompile_args.json --text --graph --video --video_name Fighting006_x264 --loop_at 24 --post_message --address 127.0.0.1 -p 5556``
+``python main.py rules/expected_events.txt rules/event_defs.pl --graph_x_size 500 -o rules/interesting_objects.txt --precompile rules/full_precompile_args.json --text --graph --video --video_name Fighting006_x264 --loop_at 24 --post_message --address 127.0.0.1 -p 5556``
 --->

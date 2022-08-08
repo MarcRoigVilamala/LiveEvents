@@ -2,11 +2,9 @@ import csv
 from functools import reduce
 from itertools import combinations
 
-import numpy as np
-import pandas as pd
 import click
 
-from eventGeneration.translations.objectsReading import split_objects, group_by_class, group_by_frame
+from input.eventGeneration.translations.objectsReading import split_objects, group_by_class, group_by_frame
 
 BETA_COUNT = 5
 

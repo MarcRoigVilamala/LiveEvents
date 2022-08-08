@@ -6,7 +6,7 @@ import pytorch_lightning as pl
 from sklearn.metrics import confusion_matrix
 import os
 
-from eventGeneration.Neuroplytorch import losses, basic_models
+from input.eventGeneration.Neuroplytorch import basic_models, losses
 
 
 class ReasoningModel(pl.LightningModule):

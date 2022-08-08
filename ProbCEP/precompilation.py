@@ -1,10 +1,7 @@
-from problog import get_evaluatable
-from problog.evaluator import SemiringSymbolic
 from problog.logic import Constant, Term
-from problog.program import PrologString
 from preCompilation.PreCompilation import PreCompilation, Query
-from PyProbEC.utils import get_values
-from eventGeneration.event import Event
+from ProbCEP.utils import get_values
+from input.eventGeneration.event import Event
 
 
 class EventPreCompilation(PreCompilation):

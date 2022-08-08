@@ -1,7 +1,7 @@
 import torch
 
-from eventGeneration.Neuroplytorch import models, basic_models
-from eventGeneration.event import Event
+from input.eventGeneration.Neuroplytorch import basic_models, models
+from input.eventGeneration.event import Event
 
 
 def load_pretrained_model(num_primitive_events=10, output_size=10, window_size=10):

@@ -28,5 +28,5 @@ if __name__ == '__main__':
             'streetMusic'
         ],
         window=5,
-        output_filename='thesisAudio_precompile_args.json'
+        output_filename='worryingSiren_precompile_args.json'
     )

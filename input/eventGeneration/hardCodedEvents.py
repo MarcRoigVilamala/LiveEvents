@@ -1,4 +1,4 @@
-from eventGeneration.event import Event
+from input.eventGeneration.event import Event
 
 
 class HardCodedObjectDetectorEventGenerator(object):
