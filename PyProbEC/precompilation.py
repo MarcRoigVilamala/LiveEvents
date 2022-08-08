@@ -17,8 +17,6 @@ class EventPreCompilation(PreCompilation):
         super(EventPreCompilation, self).__init__(precomp_args, model)
 
     def get_values_for(self, query_timestamps, expected_events, input_events=()):
-        res = {}
-
         input_events = list(input_events)
 
         missing_events = set(expected_events) - set(self.precompilations.keys())

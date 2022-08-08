@@ -31,6 +31,9 @@ class VideoFeed(object):
     # def __del__(self):
     #     self.video.release()
 
+    def get_max_length(self):
+        return int(self.video.get(cv2.CAP_PROP_FRAME_COUNT))
+
     def stop_loop(self):
         self.loop_at = None
 

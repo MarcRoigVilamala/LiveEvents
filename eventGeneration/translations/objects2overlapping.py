@@ -4,7 +4,7 @@ import click
 import pandas as pd
 from itertools import combinations
 
-from objectsReading import split, group_by_frame
+from objectsReading import split_objects, group_by_frame
 
 DEFAULT_OUTPUT_PATH = '/home/marc/projectes/TPLP-Data.v2012.11.10/interestFiltering/overlapping/'
 
@@ -52,33 +52,33 @@ def get_distance(point_a, point_b):
 
 
 def count_beta(to_overlap, n_frames):
-    def count_positives(pos):
-        return 1 + sum(
-            map(
-                lambda x: x * BETA_COUNT,
-                filter(
-                    lambda x: x >= OVERLAPPING_THRESHOLD,
-                    pos
-                )
-            )
-        )  # Positives is the weighted sum of all the ones that are over the threshold
-
-    def count_negatives(pos):
-        return 1 + sum(
-            map(
-                lambda x: (1 - x) * BETA_COUNT,
-                filter(
-                    lambda x: x < OVERLAPPING_THRESHOLD,
-                    pos
-                )
-            )
-        )  # Negatives is the weighted sum of all the ones that are below the threshold
-
-    def calculate_beta(positives_probs):
-        pos = count_positives(positives_probs)
-        neg = count_negatives(positives_probs)
-
-        return pos / (pos + neg)
+    # def count_positives(pos):
+    #     return 1 + sum(
+    #         map(
+    #             lambda x: x * BETA_COUNT,
+    #             filter(
+    #                 lambda x: x >= OVERLAPPING_THRESHOLD,
+    #                 pos
+    #             )
+    #         )
+    #     )  # Positives is the weighted sum of all the ones that are over the threshold
+    #
+    # def count_negatives(pos):
+    #     return 1 + sum(
+    #         map(
+    #             lambda x: (1 - x) * BETA_COUNT,
+    #             filter(
+    #                 lambda x: x < OVERLAPPING_THRESHOLD,
+    #                 pos
+    #             )
+    #         )
+    #     )  # Negatives is the weighted sum of all the ones that are below the threshold
+    #
+    # def calculate_beta(positives_probs):
+    #     pos = count_positives(positives_probs)
+    #     neg = count_negatives(positives_probs)
+    #
+    #     return pos / (pos + neg)
 
     probs = {}
 
@@ -134,7 +134,7 @@ def translate(filename, output_path, average_n_frames=16, every_n_frames=8):
     with open(output_path + output_filename, 'w') as o:
         timestamps = set()
 
-        for timestamp, to_overlap in split(filename, average_n_frames, every_n_frames).items():
+        for timestamp, to_overlap in split_objects(filename, average_n_frames, every_n_frames).items():
             timestamps.add(int(timestamp))
 
             overlaps = count_beta(to_overlap, average_n_frames)

@@ -1,0 +1,346 @@
+{
+    "input_clauses": [
+        {
+            "event": "outNplytAirConditioner",
+            "timestamp": 0,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytAirConditioner",
+            "timestamp": 1,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytAirConditioner",
+            "timestamp": 2,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytCarHorn",
+            "timestamp": 0,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytCarHorn",
+            "timestamp": 1,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytCarHorn",
+            "timestamp": 2,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytChildrenPlaying",
+            "timestamp": 0,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytChildrenPlaying",
+            "timestamp": 1,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytChildrenPlaying",
+            "timestamp": 2,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytDogBark",
+            "timestamp": 0,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytDogBark",
+            "timestamp": 1,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytDogBark",
+            "timestamp": 2,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytDrilling",
+            "timestamp": 0,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytDrilling",
+            "timestamp": 1,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytDrilling",
+            "timestamp": 2,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytEngineIdling",
+            "timestamp": 0,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytEngineIdling",
+            "timestamp": 1,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytEngineIdling",
+            "timestamp": 2,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytGunShot",
+            "timestamp": 0,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytGunShot",
+            "timestamp": 1,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytGunShot",
+            "timestamp": 2,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytJackhammer",
+            "timestamp": 0,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytJackhammer",
+            "timestamp": 1,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytJackhammer",
+            "timestamp": 2,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytSiren",
+            "timestamp": 0,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytSiren",
+            "timestamp": 1,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytSiren",
+            "timestamp": 2,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytStreetMusic",
+            "timestamp": 0,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytStreetMusic",
+            "timestamp": 1,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "event": "outNplytStreetMusic",
+            "timestamp": 2,
+            "event_type": "neuroplytorchAudio"
+        },
+        {
+            "timestamp": 0,
+            "event": "ceNplytAirConditioner=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 1,
+            "event": "ceNplytAirConditioner=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 2,
+            "event": "ceNplytAirConditioner=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 0,
+            "event": "ceNplytCarHorn=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 1,
+            "event": "ceNplytCarHorn=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 2,
+            "event": "ceNplytCarHorn=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 0,
+            "event": "ceNplytChildrenPlaying=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 1,
+            "event": "ceNplytChildrenPlaying=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 2,
+            "event": "ceNplytChildrenPlaying=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 0,
+            "event": "ceNplytDogBark=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 1,
+            "event": "ceNplytDogBark=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 2,
+            "event": "ceNplytDogBark=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 0,
+            "event": "ceNplytDrilling=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 1,
+            "event": "ceNplytDrilling=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 2,
+            "event": "ceNplytDrilling=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 0,
+            "event": "ceNplytEngineIdling=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 1,
+            "event": "ceNplytEngineIdling=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 2,
+            "event": "ceNplytEngineIdling=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 0,
+            "event": "ceNplytGunShot=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 1,
+            "event": "ceNplytGunShot=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 2,
+            "event": "ceNplytGunShot=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 0,
+            "event": "ceNplytJackhammer=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 1,
+            "event": "ceNplytJackhammer=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 2,
+            "event": "ceNplytJackhammer=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 0,
+            "event": "ceNplytSiren=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 1,
+            "event": "ceNplytSiren=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 2,
+            "event": "ceNplytSiren=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 0,
+            "event": "ceNplytStreetMusic=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 1,
+            "event": "ceNplytStreetMusic=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 2,
+            "event": "ceNplytStreetMusic=true",
+            "event_type": "holdsAt_"
+        }
+    ],
+    "queries": [
+        {
+            "identifier": "ceNplytAirConditioner",
+            "timestamp": 3
+        },
+        {
+            "identifier": "ceNplytCarHorn",
+            "timestamp": 3
+        },
+        {
+            "identifier": "ceNplytChildrenPlaying",
+            "timestamp": 3
+        },
+        {
+            "identifier": "ceNplytDogBark",
+            "timestamp": 3
+        },
+        {
+            "identifier": "ceNplytDrilling",
+            "timestamp": 3
+        },
+        {
+            "identifier": "ceNplytEngineIdling",
+            "timestamp": 3
+        },
+        {
+            "identifier": "ceNplytGunShot",
+            "timestamp": 3
+        },
+        {
+            "identifier": "ceNplytJackhammer",
+            "timestamp": 3
+        },
+        {
+            "identifier": "ceNplytSiren",
+            "timestamp": 3
+        },
+        {
+            "identifier": "ceNplytStreetMusic",
+            "timestamp": 3
+        }
+    ]
+}

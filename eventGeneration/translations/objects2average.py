@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import click
 
-from eventGeneration.translations.objectsReading import split, group_by_class, group_by_frame
+from eventGeneration.translations.objectsReading import split_objects, group_by_class, group_by_frame
 
 BETA_COUNT = 5
 
@@ -128,7 +128,7 @@ def save_average(output, average):
 def calculate_average(filepath='output.csv', output='averages/output.csv', average_n_frames=16, every_n_frames=8):
     res = {}
 
-    for timestamp, to_average in split(filepath, average_n_frames, every_n_frames).items():
+    for timestamp, to_average in split_objects(filepath, average_n_frames, every_n_frames).items():
         res[timestamp] = count_beta(to_average, timestamp, average_n_frames)
 
         print(timestamp, end="\r", flush=True)

@@ -34,6 +34,10 @@ from eventGeneration.event import Event
 from eventGeneration.eventGeneration import EventGenerator
 from eventGeneration.fromFileEvents import FromFileEventGenerator
 from eventGeneration.fromAudioNN import FromAudioNN, DemoFromAudioNN, SoundVGGish
+try:
+    from eventGeneration.Neuroplytorch.fromAudioNeuroplytorch import generate_audio_neuroplytorch_event_gen
+except ImportError:
+    generate_audio_neuroplytorch_event_gen = None
 from graph import Graph
 
 import tkinter as tk
@@ -186,6 +190,14 @@ def mark_objects(video_name):
     return objects_detected
 
 
+def event_exists_in(event, event_list):
+    for e in event_list:
+        if e.timestamp == event.timestamp and e.identifier == event.identifier:
+            return True
+
+    return False
+
+
 def start_detecting(input_feed, event_generator, expected_events, event_definition, add_to_model, max_window, cep_frequency,
                     group_size, group_frequency, graph_x_size, fps, precompile, text, clean_text, timings, use_graph, use_audio, audio_file,
                     video, video_name, video_x_position, video_y_position, loop_at, button, post_message, address,
@@ -303,10 +315,15 @@ def start_detecting(input_feed, event_generator, expected_events, event_definiti
                 # And add the part to convert back into events with the correct id
                 new_events = convert_after_event_generation(new_events, i - video_i)
 
-                events += new_events
+                # This would allow multiple events of the same type at the same timestamp if the event generator
+                # doesn't prevent it
+                # events += new_events
+                for e in new_events:
+                    if not event_exists_in(e, events):
+                        events.append(e)
 
         # Every cep_frequency frames, run the CEP part with the relevant events
-        # The i - max_window >= -1 is for the first iteration, where we do not have all the relevant frames
+        # The i - group_size >= -1 is for the first iteration, where we do not have all the relevant frames
         if not (i + 1) % cep_frequency and i - group_size >= -1:
             # print("Executing problog at {} for {} to {}".format(i, i - max_window + 1, i))
 
@@ -493,6 +510,12 @@ def create_event_generator(event_generator_types, interesting_objects, video_cla
             event_gen = FromAudioNN(
                 classes=classes, network=network
             )
+        elif 'FromAudioNeuroplytorch':
+            if generate_audio_neuroplytorch_event_gen is None:
+                raise Exception(
+                    "FromAudioNeuroplytorch cannot be used due to ImportError. Ensure pytorch_lightning is installed"
+                )
+            event_gen = generate_audio_neuroplytorch_event_gen()
         else:
             raise ValueError("Unexpected value for add_event_generator: {}".format(event_gen_type))
 
@@ -549,6 +572,7 @@ def create_input_feed(input_feed_type, audio_file, loop_at, video_class, video_n
             'Video',
             'FromAudioNN',
             'FromLiveAudioNN',
+            'FromAudioNeuroplytorch',
             # 'DemoFromAudioNN'
         ]
     ),
@@ -558,12 +582,28 @@ def create_input_feed(input_feed_type, audio_file, loop_at, video_class, video_n
     '--audio_file', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help='Audio file. Should be included if AudioFeed is selected as the INPUT_FEED_TYPE'
 )
-@click.option('-w', '--max_window', default=32, help='Maximum number of frames we want to remember')
-@click.option('--cep_frequency', default=8, help='Frequency for calling the CEP code to generate new complex events')
-@click.option('-g', '--group_size', default=16, help='Number of frames considered to generate each simple event')
-@click.option('-f', '--group_frequency', default=8, help='Frequency with which we generate simple events')
 @click.option(
-    '--graph_x_size', default=None,
+    '-w', '--max_window', default=32,
+    help='Maximum window size used in event definitions. '
+         'At timestamp T, remove all simple events happening before T - max_window from the list.'
+)
+@click.option(
+    '--cep_frequency', default=8,
+    help='The logic inference is performed every cep_frequency iterations from the input feed. '
+         'That is, every cep_frequency frames for video and every cep_frequency seconds for audio.'
+)
+@click.option(
+    '-g', '--group_size', default=16,
+    help='Number of iterations from the input feed considered to generate a complex event. '
+         'Should be set to 16 frames for video and 1 second for audio for default configuration.'
+)
+@click.option(
+    '-f', '--group_frequency', default=8,
+    help='Frequency at which event generators are called, based on the number of iterations from the input feed. '
+         'Usually, 8 frames for video (to have an overlapping of 8 frames) and 1 second for audio.'
+)
+@click.option(
+    '--graph_x_size', default=None, type=int,
     help='Size of the x axis (time) for the graph. Only if graph is in use. If undefined, the system will attempt to '
          'use the appropriate size automatically'
 )

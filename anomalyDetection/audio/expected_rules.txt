@@ -1,0 +1,32 @@
+initiatedAt(single = true, T) :-
+    givenRemaining(Remaining),
+    sequenceEndingAt([explosion, explosion], Remaining, T).
+
+initiatedAt(single = false, T) :-
+    givenRemaining(Remaining),
+    sequenceEndingAt([siren, siren], Remaining, T).
+initiatedAt(single = false, T) :-
+    givenRemaining(Remaining),
+    sequenceEndingAt([notScreaming, notShatter, notGunShot], Remaining, T).
+
+
+initiatedAt(chained = true, T) :-
+    holdsAt(single, T),
+    givenRemaining(Remaining),
+    sequenceEndingAt([explosion, explosion], Remaining, T).
+
+initiatedAt(chained = false, T) :-
+    givenRemaining(Remaining),
+    sequenceEndingAt([siren, siren], Remaining, T).
+initiatedAt(chained = false, T) :-
+    givenRemaining(Remaining),
+    sequenceEndingAt([notScreaming, notShatter, notGunShot], Remaining, T).
+
+
+initiatedAt(training = true, T) :-
+    givenRemaining(Remaining),
+    sequenceEndingAt([silence, explosion, explosion], Remaining, T).
+
+initiatedAt(training = false, T) :-
+    givenRemaining(Remaining),
+    sequenceEndingAt([siren, siren], Remaining, T).

@@ -33,7 +33,7 @@ class FromAudioNN(object):
         self.network = network
 
     def get_events_from(self, audio_tensor):
-        return self.network(audio_tensor.unsqueeze(0)).squeeze()
+        return self.network(audio_tensor.unsqueeze(0)).squeeze().tolist()
 
     def get_events(self, enumerated_frames):
         events = [

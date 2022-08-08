@@ -14,10 +14,12 @@ reverse([X | Xs], R) :-
     reverse(Xs, T),
     add_tail(T, X, R).
 
-% This allows the use of exclude(X) to not allow certain simple events in the middle of the sequence
+% This allows the use of exclude(X) to not allow certain simple
+% events in the middle of the sequence
 isNegation(exclude(X), X).
 
-% Example of the structure of wraps. Added to prevent errors where wraps is not defined
+% Example of the structure of wraps. Added to prevent errors
+% where wraps is not defined
 wraps(thisShouldNotBeUsedWrapper, thisShouldNotBeUsedWrapped).
 
 % Defining happensAt using atTime and wrapper
@@ -28,38 +30,30 @@ happensAt(X, T) :-
 % This allows the user to define how a keyword can wrap another
 wrapper(X, N1) :- wraps(N1, N2), wrapper(X, N2).
 
-% These rules allow the user to detect if an item has been excluded.
-itemInExcluded(X, [X | _]).
-% The rule below prevents instances of the wrapper triggering the excluded clause. For example, if we have a rule
-% excluding instances of "dog" (that is Y=dog), and wraps(animal, dog) is true, any timestamp for which
-% happensAt(dog, T) is true will also generate a happensAt(animal, T). This will result in evaluating the clause
-% itemInExcluded(dog, [dog | _]), which will be true (and thus the sequence will be false, as it should). However,
-% including the wraps(animal, dog) will generate the happensAt(animal, T) simple event, which will cause the system to
-% evaluate itemInExcluded(animal, [dog | _]) which will be false (assuming that animal has not been excluded as well).
-% This will cause the sequence to be true, which should not happen as the only base simple event that has happened is
-% "dog", which has been excluded. If we do not want the addition of wraps(animal, dog) to break this interaction, the
-% rule below needs to be added.
-itemInExcluded(X, [Y | _]) :- wraps(X, Y).
-% Same as above but the other way round
-itemInExcluded(X, [Y | _]) :- wraps(Y, X).
-itemInExcluded(X, [_ | L]) :- itemInExcluded(X, L).
+% Check that at timestamp T none of the excluded events happen If
+% there are no excluded, that is fine
+checkExcluded(_, []).
+% If there is an excluded, check that it does not happen at
+% timestamp T, and then check the rest of excluded
+checkExcluded(T, [X | E]) :-
+    \+ happensAt(X, T),
+    checkExcluded(T, E).
 
-% Check that Y is not in the list of excluded E
-checkExcluded(Y, E) :- \+ itemInExcluded(Y, E).
-
-% An empty sequence will always be within if there are no simple events excluded
+% An empty sequence will always be within if there are no simple
+% events excluded
 sequenceWithin([], [], _, _).
 
-% An empty sequence will also be within if we have used all of the Remaining
+% An empty sequence will also be within if we have used all of
+% the Remaining
 sequenceWithin([], _, 0, _).
 
-% An empty sequence will also be within if we reach the start of the timeline
-sequenceWithin([], _, _, 0).
+% An empty sequence will also be within if we reach the start of
+% the timeline
+sequenceWithin([], _, _, -1).
 
 sequenceWithin([], E, Remaining, T) :-
     Remaining > 0,
-    happensAt(Y, T),
-    checkExcluded(Y, E),
+    checkExcluded(T, E),
     NextRemaining is Remaining - 1,
     allTimeStamps(Timestamps),
     previousTimeStamp(T, Timestamps, Tprev),
@@ -73,19 +67,21 @@ sequenceWithin([X | L], E, Remaining, T) :-
     isNegation(X, Y),
     sequenceWithin(L, [Y | E], Remaining, T).
 
-% A sequence can be within Remaining of T if it is within NextRemaining of Tprev
+% A sequence can be within Remaining of T if it is within
+% NextRemaining of Tprev
 sequenceWithin([X | L], E, Remaining, T) :-
     Remaining > 0,
     T >= 0,
     \+ isNegation(X, _),
-    happensAt(Y, T),
-    checkExcluded(Y, E),
+    checkExcluded(T, E),
     NextRemaining is Remaining - 1,
     allTimeStamps(Timestamps),
     previousTimeStamp(T, Timestamps, Tprev),
     sequenceWithin([X | L], E, NextRemaining, Tprev).
 
-% A sequence will start at T and be within Remaining if X happens at T and the rest of the sequence is within NextRemaining of Tprev
+% A sequence will start at T and be within Remaining if X happens
+% at T and the rest of the sequence is within NextRemaining of
+% Tprev
 sequenceEndingAt([X | L], Remaining, T) :-
     Remaining > 0,
     T >= 0,

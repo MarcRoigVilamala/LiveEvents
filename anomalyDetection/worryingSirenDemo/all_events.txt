@@ -1,0 +1,11 @@
+ceAirConditioner
+ceCarHorn
+ceChildrenPlaying
+ceDogBark
+ceDrilling
+ceEngineIdling
+ceGunShot
+ceJackhammer
+ceSiren
+ceStreetMusic
+ceWorryingSiren

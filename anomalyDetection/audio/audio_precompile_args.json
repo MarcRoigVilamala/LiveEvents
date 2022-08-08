@@ -1,0 +1,183 @@
+{
+    "input_clauses": [
+        {
+            "event": "boom",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "boom",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "boom",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "boom",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "boom",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "siren",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "siren",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "siren",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "siren",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "siren",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "silence",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "silence",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "silence",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "silence",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "silence",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "gun_shot",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "gun_shot",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "gun_shot",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "gun_shot",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "gun_shot",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "shatter",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "shatter",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "shatter",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "shatter",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "shatter",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "screaming",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "screaming",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "screaming",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "screaming",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "screaming",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "timestamp": 4,
+            "event": "single=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 4,
+            "event": "chained=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 4,
+            "event": "training=true",
+            "event_type": "holdsAt_"
+        }
+    ],
+    "queries": [
+        {
+            "identifier": "single",
+            "timestamp": 5
+        },
+        {
+            "identifier": "chained",
+            "timestamp": 5
+        },
+        {
+            "identifier": "training",
+            "timestamp": 5
+        }
+    ]
+}

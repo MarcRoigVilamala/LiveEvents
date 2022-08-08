@@ -1,0 +1,305 @@
+{
+    "input_clauses": [
+        {
+            "event": "airConditioner",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "airConditioner",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "airConditioner",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "airConditioner",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "airConditioner",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "carHorn",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "carHorn",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "carHorn",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "carHorn",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "carHorn",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "childrenPlaying",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "childrenPlaying",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "childrenPlaying",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "childrenPlaying",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "childrenPlaying",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "dogBark",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "dogBark",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "dogBark",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "dogBark",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "dogBark",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "drilling",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "drilling",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "drilling",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "drilling",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "drilling",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "engineIdling",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "engineIdling",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "engineIdling",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "engineIdling",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "engineIdling",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "gunShot",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "gunShot",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "gunShot",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "gunShot",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "gunShot",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "jackhammer",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "jackhammer",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "jackhammer",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "jackhammer",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "jackhammer",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "siren",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "siren",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "siren",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "siren",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "siren",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "streetMusic",
+            "timestamp": 0,
+            "event_type": "sound"
+        },
+        {
+            "event": "streetMusic",
+            "timestamp": 1,
+            "event_type": "sound"
+        },
+        {
+            "event": "streetMusic",
+            "timestamp": 2,
+            "event_type": "sound"
+        },
+        {
+            "event": "streetMusic",
+            "timestamp": 3,
+            "event_type": "sound"
+        },
+        {
+            "event": "streetMusic",
+            "timestamp": 4,
+            "event_type": "sound"
+        },
+        {
+            "event": "ceWorryingSiren",
+            "timestamp": 3,
+            "event_type": "holdsAt_"
+        }
+    ],
+    "queries": [
+        {
+            "identifier": "ceAirConditioner",
+            "timestamp": 4
+        },
+        {
+            "identifier": "ceCarHorn",
+            "timestamp": 4
+        },
+        {
+            "identifier": "ceChildrenPlaying",
+            "timestamp": 4
+        },
+        {
+            "identifier": "ceDogBark",
+            "timestamp": 4
+        },
+        {
+            "identifier": "ceDrilling",
+            "timestamp": 4
+        },
+        {
+            "identifier": "ceEngineIdling",
+            "timestamp": 4
+        },
+        {
+            "identifier": "ceGunShot",
+            "timestamp": 4
+        },
+        {
+            "identifier": "ceJackhammer",
+            "timestamp": 4
+        },
+        {
+            "identifier": "ceSiren",
+            "timestamp": 4
+        },
+        {
+            "identifier": "ceStreetMusic",
+            "timestamp": 4
+        },
+        {
+            "identifier": "ceWorryingSiren",
+            "timestamp": 4
+        }
+    ]
+}

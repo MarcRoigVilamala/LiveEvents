@@ -1,0 +1,8 @@
+initiatedAt(single) :- does_not_occur(silence), start_seq(explosion,explosion).
+initiatedAt(chained) :- held(single), start_seq(explosion,explosion).
+initiatedAt(training) :- start_seq(explosion,explosion,silence).
+
+terminatedAt(single) :- does_not_occur(screaming), does_not_occur(shatter), does_not_occur(gunshot).
+terminatedAt(chained) :- does_not_occur(screaming), does_not_occur(shatter), does_not_occur(gunshot).
+terminatedAt(training) :- end_seq(siren,siren).
+

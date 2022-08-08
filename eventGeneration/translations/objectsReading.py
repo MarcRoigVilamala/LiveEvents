@@ -15,7 +15,7 @@ def get_in_averages(timestamp, groups, every):
     ]
 
 
-def split(filepath, groups, every):
+def split_objects(filepath, groups, every):
     res = {}
 
     for l in get_objects(filepath):
