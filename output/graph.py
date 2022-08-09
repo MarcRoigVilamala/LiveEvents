@@ -106,16 +106,3 @@ class Graph(LiveEventsOutput):
     def terminate_output(self, *args, **kwargs):
         input('Press enter to finish')
         self.close()
-
-
-def initialize_graph(use_graph, graph_x_size, input_feed, expected_events_list, ce_threshold, save_graph_to):
-    if graph_x_size is None:
-        graph_x_size = input_feed.get_max_length()
-
-    # If we are using a graph, create it
-    if use_graph or save_graph_to:
-        graph = Graph(graph_x_size, expected_events_list, ce_threshold, save_graph_to, use_rectangles=False)
-    else:
-        graph = None
-
-    return graph

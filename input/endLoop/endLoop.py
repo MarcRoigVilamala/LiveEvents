@@ -1,7 +1,7 @@
 import threading
 
 from input.endLoop.byButton import create_loop_button
-from input.myHttpReceiver import create_http_reciever
+from input.endLoop.byHTTP import create_http_reciever
 
 
 def create_end_loop_triggers(input_feed, loop_at, button, post_message):

@@ -3,6 +3,7 @@ import time
 import click
 import numpy as np
 
+from confs.configuration import *
 from input.endLoop.endLoop import create_end_loop_triggers
 from input.feed.inputFeedHandling import create_input_feed
 from input.eventGeneration.event import Event
@@ -47,42 +48,27 @@ def event_exists_in(event, event_list):
     return False
 
 
-def start_detecting(input_feed, event_generator, expected_events, event_definition, add_to_model, max_window, cep_frequency,
-                    group_size, group_frequency, graph_x_size, fps, precompile, text, clean_text, timings, use_graph, play_audio, audio_file,
-                    play_video, video_name, video_x_position, video_y_position, loop_at, button, post_message, address,
-                    port, ce_threshold, video_scale, mark_objects, save_graph_to, sue_address):
-    if max_window < cep_frequency + group_frequency:
-        print(
-            'The window of events can not be smaller than the sum of the frequency of checking and grouping',
-            file=sys.stderr
-        )
-        sys.exit(-1)
+def start_detecting_iterations(model, event_generator, expected_events_list, input_feed, output_handler, conf):
+    # Get the required values from the configuration
+    max_window = conf['logic']['max_window']
+    cep_frequency = conf['logic']['cep_frequency']
+    group_size = conf['logic']['group_size']
+    group_frequency = conf['logic']['group_frequency']
 
-    with open(expected_events) as f:
-        expected_events_list = [l.strip() for l in f]
+    ce_threshold = conf['events']['ce_threshold']
 
-    output_handler = OutputHandler(
-        input_feed, event_generator, expected_events_list, event_definition, add_to_model, max_window, cep_frequency,
-        group_size, group_frequency, graph_x_size, fps, precompile, text, clean_text, timings, use_graph, play_audio,
-        audio_file, play_video, video_name, video_x_position, video_y_position, loop_at, button, post_message, address,
-        port, ce_threshold, video_scale, mark_objects, save_graph_to, sue_address
-    )
+    fps = conf['misc'].get('fps', 30.0)
+
+    # Initialize the values
+    evaluation = {}
 
     window = []
     all_events = []  # All events will contain all the simple and complex events in the window
 
-    model = generate_model(
-        [event_definition, *add_to_model],
-        precompile
-    )
-
-    evaluation = {}
     complex_events = []
 
     last_complex_event = []
     current_complex_event = []
-
-    create_end_loop_triggers(input_feed, loop_at, button, post_message)
 
     for i, (feed_i, frame) in at_rate(enumerate(input_feed), fps):
         output_update = {
@@ -158,27 +144,85 @@ def start_detecting(input_feed, event_generator, expected_events, event_definiti
 
         output_handler.update(output_update)
 
+    return evaluation
+
+
+def start_detecting(conf):
+    if conf['logic']['max_window'] < conf['logic']['cep_frequency'] + conf['logic']['group_frequency']:
+        print(
+            'The window of events can not be smaller than the sum of the frequency of checking and grouping',
+            file=sys.stderr
+        )
+        sys.exit(-1)
+
+    with open(conf['events']['expected_events']) as f:
+        expected_events_list = [l.strip() for l in f]
+
+    if conf['input'].get('video_name') is None:
+        video_class = None
+    else:
+        video_class = conf['input']['video_name'][:-8]
+
+    event_generator = create_event_generator(
+        conf['input']['add_event_generator'],
+        conf['input'].get('interesting_objects'),
+        video_class,
+        conf['input'].get('video_name')
+    )
+
+    input_feed = create_input_feed(
+        conf['input'].get('input_feed_type'),
+        conf['input'].get('audio_file'),
+        conf['input'].get('loop_at'),
+        video_class,
+        conf['input'].get('video_name')
+    )
+
+    output_handler = OutputHandler(
+        input_feed, expected_events_list, conf
+    )
+
+    model = generate_model(
+        [conf['events']['event_definition'], *conf['events']['add_to_model']],
+        conf['logic'].get('precompile')
+    )
+
+    create_end_loop_triggers(
+        input_feed,
+        conf['input'].get('loop_at'),
+        conf['input'].get('button'),
+        conf['input'].get('post_message')
+    )
+
+    evaluation = start_detecting_iterations(
+        model, event_generator, expected_events_list, input_feed, output_handler, conf
+    )
+
     output_handler.terminate_outputs(evaluation)
 
 
 @click.command()
-@click.argument('expected_events', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
-@click.argument('event_definition', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
-@click.argument(
-    'input_feed_type', type=click.Choice([
+@click.option(
+    '--conf', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help='Configuration file to use. Values from the file can be overwritten using other command line arguments.'
+)
+@click.option('--expected_events', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
+@click.option('--event_definition', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
+@click.option(
+    '--input_feed_type', type=click.Choice([
         'VideoFeed',
         'LiveAudioFeed',
         'AudioFeed',
         # 'DemoAudioFeed'
     ]),
-    # input_feed_type should represent the type of input stream being used
+    help='Should represent the type of input stream being used'
 )
 @click.option(
     '--add_to_model', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True), multiple=True,
     help='Further ProbLog files to be added to the model generation'
 )
 @click.option(
-    '--add_event_generator', multiple=True, required=True,
+    '--add_event_generator', multiple=True,
     type=click.Choice(
         [
             'File3DResNet',
@@ -199,41 +243,41 @@ def start_detecting(input_feed, event_generator, expected_events, event_definiti
     help='Audio file. Should be included if AudioFeed is selected as the INPUT_FEED_TYPE'
 )
 @click.option(
-    '-w', '--max_window', default=32,
+    '-w', '--max_window', type=int,  # default=32,
     help='Maximum window size used in event definitions. '
          'At timestamp T, remove all simple events happening before T - max_window from the list.'
 )
 @click.option(
-    '--cep_frequency', default=8,
+    '--cep_frequency', type=int,  # default=8,
     help='The logic inference is performed every cep_frequency iterations from the input feed. '
          'That is, every cep_frequency frames for video and every cep_frequency seconds for audio.'
 )
 @click.option(
-    '-g', '--group_size', default=16,
+    '-g', '--group_size', type=int,  # default=16,
     help='Number of iterations from the input feed considered to generate a complex event. '
          'Should be set to 16 frames for video and 1 second for audio for default configuration.'
 )
 @click.option(
-    '-f', '--group_frequency', default=8,
+    '-f', '--group_frequency', type=int,  # default=8,
     help='Frequency at which event generators are called, based on the number of iterations from the input feed. '
          'Usually, 8 frames for video (to have an overlapping of 8 frames) and 1 second for audio.'
 )
 @click.option(
-    '--graph_x_size', default=None, type=int,
+    '--graph_x_size', type=int,
     help='Size of the x axis (time) for the graph. Only if graph is in use. If undefined, the system will attempt to '
          'use the appropriate size automatically'
 )
 @click.option(
-    '-o', '--interesting_objects', default=None,
+    '-o', '--interesting_objects',
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help='File defining the list of objects we care about from the object detector output'
 )
 @click.option(
-    '--fps', default=30.0,
+    '--fps', type=float,
     help='Number of frames that are processed every second. Controls the speed at which the program processes the feed'
 )
 @click.option(
-    '--precompile', default=None, type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    '--precompile', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help='JSON file defining the inputs and outputs for which we can use precompilation'
 )
 @click.option(
@@ -248,31 +292,30 @@ def start_detecting(input_feed, event_generator, expected_events, event_definiti
     '--timings', is_flag=True, help='If used, the system will output messages indicating the time performance'
 )
 @click.option(
-    '--graph', is_flag=True,
+    '--use_graph', '--graph', is_flag=True,
     help='If used, a live graph will be generated showing the values of the different complex events'
 )
-@click.option('--audio', is_flag=True, help='If used, a live audio will be played')
-@click.option('--video', is_flag=True, help='If used, a live video will be shown')
-@click.option('--video_name', default=None, help='Name of the video for which we want to perform CEP')
-@click.option('--video_x_position', default=1000, help='X position to spawn the video. Only if video is in use')
-@click.option('--video_y_position', default=200, help='Y position to spawn the video. Only if video is in use')
+@click.option('--play_audio', '--audio', is_flag=True, help='If used, a live audio will be played')
+@click.option('--play_video', '--video', is_flag=True, help='If used, a live video will be shown')
+@click.option('--video_name', type=str, help='Name of the video for which we want to perform CEP')
+@click.option('--video_x_position', type=int, help='X position to spawn the video. Only if video is in use')
+@click.option('--video_y_position', type=int, help='Y position to spawn the video. Only if video is in use')
 @click.option(
-    '--loop_at', default=None, type=int,
-    help='If used, the video will loop at the given number until a button is pressed'
+    '--loop_at', type=int, help='If used, the video will loop at the given number until a button is pressed'
 )
 @click.option('--button', is_flag=True, help='Use to create a button to stop the loop')
 @click.option('--post_message', is_flag=True, help='Use to allow a HTTP POST message to stop the loop')
 @click.option(
-    '--address', default=None, type=str, help='Specify if you want to send messages through ZeroMQ'
+    '--zmq_address', type=str, help='Specify if you want to send messages through ZeroMQ'
 )
 @click.option(
-    '-p', '--port', default=9999, help='Port to use for the ZeroMQ connection'
+    '-p', '--zmq_port', default=9999, type=int, help='Port to use for the ZeroMQ connection'
 )
 @click.option(
-    '--ce_threshold', default=0.5, help='Threshold for above which probability we detect a complex event'
+    '--ce_threshold', default=0.5, type=float, help='Threshold for above which probability we detect a complex event'
 )
 @click.option(
-    '--video_scale', default=1.0, help='Scale of the video'
+    '--video_scale', help='Scale of the video'
 )
 @click.option(
     '--mark_objects', is_flag=True, help='If used, objects will be marked in the video'
@@ -282,55 +325,20 @@ def start_detecting(input_feed, event_generator, expected_events, event_definiti
     help='Save the generated graph to the given path. Requires .mp4 extension'
 )
 @click.option(
-    '--sue_address', default=None, type=str, help='Specify if you want to send a message to SUE'
+    '--sue_address', type=str, help='Specify if you want to send a message to SUE'
 )
-def main(expected_events, event_definition, input_feed_type, add_to_model, add_event_generator, audio_file, max_window,
-         cep_frequency, group_size, group_frequency, graph_x_size, interesting_objects, fps, precompile, text,
-         clean_text, timings, graph, audio, video, video_name, video_x_position, video_y_position, loop_at, button,
-         post_message, address, port, ce_threshold, video_scale, mark_objects, save_graph_to, sue_address):
-    if video_name is None:
-        video_class = None
+def main(conf, *args, **kwargs):
+    if conf:
+        conf = parse_configuration(conf_filename=conf)
+
+        conf = update_configuration_values(
+            conf, *args, **kwargs
+        )
     else:
-        video_class = video_name[:-8]
+        conf = create_configuration(*args, **kwargs)
+    # save_configuration(remove_empty_values(conf), 'confs/worryingSirenDemo.json')
 
-    event_generator = create_event_generator(add_event_generator, interesting_objects, video_class, video_name)
-
-    input_feed = create_input_feed(input_feed_type, audio_file, loop_at, video_class, video_name)
-
-    start_detecting(
-        input_feed=input_feed,
-        event_generator=event_generator,
-        expected_events=expected_events,
-        event_definition=event_definition,
-        add_to_model=add_to_model,
-        max_window=max_window,
-        cep_frequency=cep_frequency,
-        group_size=group_size,
-        group_frequency=group_frequency,
-        graph_x_size=graph_x_size,
-        fps=fps,
-        precompile=precompile,
-        text=text,
-        clean_text=clean_text,
-        timings=timings,
-        use_graph=graph,
-        play_audio=audio,
-        audio_file=audio_file,
-        play_video=video,
-        video_name=video_name,
-        video_x_position=video_x_position,
-        video_y_position=video_y_position,
-        loop_at=loop_at,
-        button=button,
-        post_message=post_message,
-        address=address,
-        port=port,
-        ce_threshold=ce_threshold,
-        video_scale=video_scale,
-        mark_objects=mark_objects,
-        save_graph_to=save_graph_to,
-        sue_address=sue_address
-    )
+    start_detecting(conf)
 
 
 if __name__ == '__main__':

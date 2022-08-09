@@ -85,10 +85,10 @@ The video can be further configured with the following options:
 The following can be used to send messages to other applications:
 
 ````
-  --address TEXT                  Specify if you want to send messages through
+  --zmq_address TEXT              Specify if you want to send messages through
                                   ZeroMQ
 
-  -p, --port INTEGER              Port to use for the ZeroMQ connection
+  -p, --zmq_port INTEGER          Port to use for the ZeroMQ connection
   --sue_address TEXT              Specify if you want to send a message to SUE
 ````
 
