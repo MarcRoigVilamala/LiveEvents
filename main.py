@@ -48,7 +48,7 @@ def event_exists_in(event, event_list):
     return False
 
 
-def start_detecting_iterations(model, event_generator, expected_events_list, input_feed, output_handler, conf):
+def start_detecting_iterations(model, event_generator, tracked_ce, input_feed, output_handler, conf):
     # Get the required values from the configuration
     max_window = conf['logic']['max_window']
     cep_frequency = conf['logic']['cep_frequency']
@@ -114,7 +114,7 @@ def start_detecting_iterations(model, event_generator, expected_events_list, inp
             new_evaluation = model.get_probabilities_precompile(
                 existing_timestamps=np.arange(0, i + 1, group_frequency),
                 query_timestamps=[i - group_size + 1],
-                expected_events=expected_events_list,
+                tracked_ce=tracked_ce,
                 input_events=all_events
             )
             output_update['new_evaluation'] = new_evaluation
@@ -155,9 +155,6 @@ def start_detecting(conf):
         )
         sys.exit(-1)
 
-    with open(conf['events']['expected_events']) as f:
-        expected_events_list = [l.strip() for l in f]
-
     if conf['input'].get('video_name') is None:
         video_class = None
     else:
@@ -179,7 +176,7 @@ def start_detecting(conf):
     )
 
     output_handler = OutputHandler(
-        input_feed, expected_events_list, conf
+        input_feed, conf['events']['tracked_ce'], conf
     )
 
     model = generate_model(
@@ -195,7 +192,7 @@ def start_detecting(conf):
     )
 
     evaluation = start_detecting_iterations(
-        model, event_generator, expected_events_list, input_feed, output_handler, conf
+        model, event_generator, conf['events']['tracked_ce'], input_feed, output_handler, conf
     )
 
     output_handler.terminate_outputs(evaluation)
@@ -206,7 +203,10 @@ def start_detecting(conf):
     '--conf', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help='Configuration file to use. Values from the file can be overwritten using other command line arguments.'
 )
-@click.option('--expected_events', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
+@click.option(
+    '--tracked_ce', multiple=True, type=str,
+    help='Name of the complex event that needs to be tracked. Use multiple times to track multiple complex events.'
+)
 @click.option('--event_definition', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
 @click.option(
     '--input_feed_type', type=click.Choice([

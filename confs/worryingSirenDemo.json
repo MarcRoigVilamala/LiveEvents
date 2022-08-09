@@ -10,7 +10,13 @@
         "text": true
     },
     "events": {
-        "expected_events": "rules/worryingSirenDemo/all_events.txt",
+        "tracked_ce": [
+            "ceStreetMusic",
+            "ceSiren",
+            "ceChildrenPlaying",
+            "ceGunShot",
+            "ceWorryingSiren"
+        ],
         "event_definition": "rules/worryingSirenDemo/event_defs.pl",
         "add_to_model": [
             "rules/worryingSirenDemo/prevTimestamp.pl",

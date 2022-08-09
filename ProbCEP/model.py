@@ -61,7 +61,7 @@ class Model(object):
 
         return sorted([item for sublist in timestamps for item in sublist])
 
-    def get_values_for(self, existing_timestamps, query_timestamps, expected_events, input_events=()):
+    def get_values_for(self, existing_timestamps, query_timestamps, tracked_ce, input_events=()):
         # As the model we use self.model (basic EC definition + definition of rules by the user) and we add the list
         # of the input events
         string_model = self.model + '\n' + '\n'.join(map(lambda x: x.to_problog(), input_events))
@@ -73,7 +73,7 @@ class Model(object):
         res = {}
 
         for timestamp in query_timestamps:
-            for event in expected_events:
+            for event in tracked_ce:
                 query = 'query(holdsAt({event} = true, {timestamp})).\n'.format(event=event, timestamp=timestamp)
 
                 model = PrologString(string_model + '\n' + updated_knowledge + '\n' + query)
@@ -90,17 +90,17 @@ class Model(object):
 
         return res
 
-    def get_probabilities(self, existing_timestamps, query_timestamps, expected_events, input_events=()):
+    def get_probabilities(self, existing_timestamps, query_timestamps, tracked_ce, input_events=()):
         evaluation = self.get_values_for(
-            existing_timestamps, query_timestamps, expected_events, input_events=input_events
+            existing_timestamps, query_timestamps, tracked_ce, input_events=input_events
         )
 
         return self._evaluation_to_prob(evaluation)
 
-    def get_probabilities_precompile(self, existing_timestamps, query_timestamps, expected_events, input_events=()):
+    def get_probabilities_precompile(self, existing_timestamps, query_timestamps, tracked_ce, input_events=()):
         if self.precompilation:
             evaluation, missing_events = self.precompilation.get_values_for(
-                query_timestamps, expected_events, input_events
+                query_timestamps, tracked_ce, input_events
             )
 
             res = self._evaluation_to_prob(evaluation)
@@ -114,7 +114,7 @@ class Model(object):
 
             return res
         else:
-            return self.get_probabilities(existing_timestamps, query_timestamps, expected_events, input_events)
+            return self.get_probabilities(existing_timestamps, query_timestamps, tracked_ce, input_events)
 
     @staticmethod
     def read_model(m):

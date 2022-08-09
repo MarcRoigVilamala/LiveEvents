@@ -6,7 +6,7 @@ from output.liveEventsOutupt import LiveEventsOutput
 
 
 class Graph(LiveEventsOutput):
-    def __init__(self, graph_x_size, expected_events, ce_threshold, save_graph_to=None, use_rectangles=True):
+    def __init__(self, graph_x_size, tracked_ce, ce_threshold, save_graph_to=None, use_rectangles=True):
         self.graph_x_size = graph_x_size
         self.ce_threshold = ce_threshold
         self.use_rectangles = use_rectangles
@@ -24,7 +24,7 @@ class Graph(LiveEventsOutput):
         # rectangles of the same color (if the option is active)
         self.lines = {}
         self.colors = {}
-        for event in expected_events:
+        for event in tracked_ce:
             self.lines[event], = self.ax.plot(x, y, label=event)  # Returns a tuple of line objects, thus the comma
 
             self.colors[event] = self.lines[event].get_color()

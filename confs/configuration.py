@@ -16,7 +16,7 @@ def parse_configuration(conf_filename):
     return conf
 
 
-def create_configuration(expected_events, event_definition, input_feed_type, add_to_model, add_event_generator,
+def create_configuration(tracked_ce, event_definition, input_feed_type, add_to_model, add_event_generator,
                          audio_file, max_window, cep_frequency, group_size, group_frequency, graph_x_size,
                          interesting_objects, fps, precompile, text, clean_text, timings, use_graph, play_audio,
                          play_video, video_name, video_x_position, video_y_position, loop_at, button, post_message,
@@ -56,7 +56,7 @@ def create_configuration(expected_events, event_definition, input_feed_type, add
             'sue_address': sue_address
         },
         'events': {
-            'expected_events': expected_events,
+            'tracked_ce': tracked_ce,
             'event_definition': event_definition,
             'add_to_model': add_to_model,
             'ce_threshold': ce_threshold

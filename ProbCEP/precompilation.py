@@ -13,17 +13,17 @@ class EventPreCompilation(PreCompilation):
 
         super(EventPreCompilation, self).__init__(precomp_args, model)
 
-    def get_values_for(self, query_timestamps, expected_events, input_events=()):
+    def get_values_for(self, query_timestamps, tracked_ce, input_events=()):
         input_events = list(input_events)
 
-        missing_events = set(expected_events) - set(self.precompilations.keys())
+        missing_events = set(tracked_ce) - set(self.precompilations.keys())
 
         # if missing_events:
         #     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         #     print(missing_events)
         #     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 
-        query_events = set(expected_events) - set(missing_events)
+        query_events = set(tracked_ce) - set(missing_events)
 
         queries = [
             EventQuery(identifier=event, timestamp=timestamp)
