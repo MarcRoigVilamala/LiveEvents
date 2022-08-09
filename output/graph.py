@@ -2,8 +2,10 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 from matplotlib.animation import FFMpegFileWriter
 
+from output.liveEventsOutupt import LiveEventsOutput
 
-class Graph(object):
+
+class Graph(LiveEventsOutput):
     def __init__(self, graph_x_size, expected_events, ce_threshold, save_graph_to=None, use_rectangles=True):
         self.graph_x_size = graph_x_size
         self.ce_threshold = ce_threshold
@@ -35,6 +37,7 @@ class Graph(object):
         plt.xlabel('Time (s)')
         plt.ylabel('Confidence')
 
+        self.save_graph_to = save_graph_to
         if save_graph_to:
             self.graph_writer = FFMpegFileWriter(fps=1)
             # self.graph_writer.setup(self.fig, save_graph_to, 100)
@@ -55,41 +58,64 @@ class Graph(object):
             else:
                 self.last_rectangle[event] = self.add_rectangle(event, x_data[i - 1], x_data[i])
 
-    def update(self, evaluation):
-        # We can get the x_data from just one of the lines since they should all be the same
-        x_data = sorted(evaluation[list(self.lines.keys())[0]]['()'].keys())
+    def update(self, output_update):
+        if 'new_complex_events' in output_update:
+            evaluation = output_update['evaluation']
 
-        # Find which range we want to show based on the data we have
-        max_data = x_data[-1]
-        right = max(max_data, self.graph_x_size)
-        left = right - self.graph_x_size
+            # We can get the x_data from just one of the lines since they should all be the same
+            x_data = sorted(evaluation[list(self.lines.keys())[0]]['()'].keys())
 
-        # Increase the range by 10% on each side to make it less cramped
-        left -= self.graph_x_size / 10
-        right += self.graph_x_size / 10
+            # Find which range we want to show based on the data we have
+            max_data = x_data[-1]
+            right = max(max_data, self.graph_x_size)
+            left = right - self.graph_x_size
 
-        self.ax.set_xlim(left, right)
+            # Increase the range by 10% on each side to make it less cramped
+            left -= self.graph_x_size / 10
+            right += self.graph_x_size / 10
 
-        for event, line in self.lines.items():
-            y_data = [evaluation[event]['()'][k] for k in x_data]
+            self.ax.set_xlim(left, right)
 
-            line.set_xdata(x_data)
-            line.set_ydata(y_data)
+            for event, line in self.lines.items():
+                y_data = [evaluation[event]['()'][k] for k in x_data]
 
-            if self.use_rectangles:
-                for i in range(self.previous_x_data_length, len(x_data)):
-                    if y_data[i] > self.ce_threshold:
-                        self.mark_rectangle_until(event, x_data, i)
+                line.set_xdata(x_data)
+                line.set_ydata(y_data)
 
-        self.previous_x_data_length = len(x_data)
+                if self.use_rectangles:
+                    for i in range(self.previous_x_data_length, len(x_data)):
+                        if y_data[i] > self.ce_threshold:
+                            self.mark_rectangle_until(event, x_data, i)
 
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
+            self.previous_x_data_length = len(x_data)
 
-        if self.graph_writer:
-            # for _ in range(8):
-            self.graph_writer.grab_frame()
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+
+            if self.graph_writer:
+                # for _ in range(8):
+                self.graph_writer.grab_frame()
 
     def close(self):
         if self.graph_writer:
             self.graph_writer.finish()
+
+    def finish_initialization(self):
+        pass
+
+    def terminate_output(self, *args, **kwargs):
+        input('Press enter to finish')
+        self.close()
+
+
+def initialize_graph(use_graph, graph_x_size, input_feed, expected_events_list, ce_threshold, save_graph_to):
+    if graph_x_size is None:
+        graph_x_size = input_feed.get_max_length()
+
+    # If we are using a graph, create it
+    if use_graph or save_graph_to:
+        graph = Graph(graph_x_size, expected_events_list, ce_threshold, save_graph_to, use_rectangles=False)
+    else:
+        graph = None
+
+    return graph

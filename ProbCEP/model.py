@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import json
+
 from problog.evaluator import SemiringSymbolic
 from problog.program import PrologString
 from problog import get_evaluatable
@@ -9,9 +11,10 @@ import sys
 
 
 # Files that define how EC works
-from ProbCEP.precompilation import EventPreCompilation
+from ProbCEP.precompilation import EventPreCompilation, EventQuery
 from ProbCEP.utils import unsorted_groupby, term_to_list, get_values
 from input.eventGeneration.event import Event
+from preCompilation.PreCompilation import PreCompilationArguments
 
 
 class Model(object):
@@ -121,3 +124,33 @@ class Model(object):
         else:
             print('\033[93m{} not found\033[0m'.format(m), file=sys.stderr)
             return '\n'
+
+
+def generate_model(event_definitions, precompile):
+    if precompile:
+        with open(precompile, 'r') as f:
+            json_precompile = json.load(f)
+
+        precomp_args = PreCompilationArguments(
+            input_clauses=[Event(**e) for e in json_precompile['input_clauses']],
+            queries=[EventQuery(**q) for q in json_precompile['queries']]
+        )
+
+        return Model(event_definitions, precomp_args)
+    else:
+        return Model(event_definitions)
+
+
+def update_evaluation(evaluation, new_evaluation):
+    for event, event_val in new_evaluation.items():
+        if event in evaluation:
+            for ids, ids_val in event_val.items():
+                if ids in evaluation[event]:
+                    for timestamp, prob in ids_val.items():
+                        evaluation[event][ids][timestamp] = prob
+                else:
+                    evaluation[event][ids] = ids_val
+        else:
+            evaluation[event] = event_val
+
+    return evaluation

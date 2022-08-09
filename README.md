@@ -71,7 +71,7 @@ The following options control which outputs are used and their configurations.
 The video can be further configured with the following options:
 
 ````
-  --object_mark                   If used, objects will be marked in the video
+  --mark_objects                  If used, objects will be marked in the video
   --video_scale FLOAT             Scale of the video
   --video_x_position INTEGER      X position to spawn the video. Only if video
                                   is in use

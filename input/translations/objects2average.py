@@ -4,7 +4,7 @@ from itertools import combinations
 
 import click
 
-from input.eventGeneration.translations.objectsReading import split_objects, group_by_class, group_by_frame
+from input.translations.objectsReading import split_objects, group_by_class, group_by_frame
 
 BETA_COUNT = 5
 

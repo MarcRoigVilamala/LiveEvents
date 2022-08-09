@@ -2,9 +2,10 @@ import pickle
 
 import zmq
 from output.connection_output.syncClock import now
+from output.liveEventsOutupt import LiveEventsOutput
 
 
-class Connection(object):
+class ZMQConnection(LiveEventsOutput):
     def __init__(self, address, port):
         context = zmq.Context.instance()
 
@@ -27,3 +28,39 @@ class Connection(object):
                     message
                 ]
             )
+
+    def finish_initialization(self):
+        pass
+
+    def update(self, output_update):
+        if 'new_complex_events' in output_update:
+            new_complex_events = output_update['new_complex_events']
+            last_complex_event = output_update['last_complex_event']
+
+            if not new_complex_events and last_complex_event:
+                max_prob = max(
+                    [
+                        ce.probability
+                        for ce in last_complex_event
+                        if ce.identifier.split(' = ')[0] == 'videoAndObjDet'
+                    ]
+                )
+
+                the_complex_event = [
+                    ce
+                    for ce in last_complex_event
+                    if ce.identifier.split(' = ')[0] == 'videoAndObjDet' and ce.probability == max_prob
+                ][0]
+
+                self.send([the_complex_event])
+
+                # connection.send(
+                #     [
+                #         ce
+                #         for ce in new_complex_events
+                #         if ce.identifier.split(' = ')[0] == 'videoAndObjDet' and ce.probability == max_prob
+                #     ]
+                # )
+
+    def terminate_output(self, *args, **kwargs):
+        pass
