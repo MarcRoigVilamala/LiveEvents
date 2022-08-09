@@ -4,10 +4,8 @@ import click
 import numpy as np
 
 from confs.configuration import *
-from input.endLoop.endLoop import create_end_loop_triggers
-from input.feed.inputFeedHandling import create_input_feed
 from input.eventGeneration.event import Event
-from input.eventGeneration.eventGeneration import create_event_generator
+from input.inputHandler import InputHandler
 from output.outputHandler import OutputHandler
 from ProbCEP.model import generate_model, update_evaluation
 
@@ -48,7 +46,7 @@ def event_exists_in(event, event_list):
     return False
 
 
-def start_detecting_iterations(model, event_generator, tracked_ce, input_feed, output_handler, conf):
+def detect_from_feeds(model, input_handler, output_handler, conf):
     # Get the required values from the configuration
     max_window = conf['logic']['max_window']
     cep_frequency = conf['logic']['cep_frequency']
@@ -70,7 +68,7 @@ def start_detecting_iterations(model, event_generator, tracked_ce, input_feed, o
     last_complex_event = []
     current_complex_event = []
 
-    for i, (feed_i, frame) in at_rate(enumerate(input_feed), fps):
+    for i, (feed_i, frame) in at_rate(enumerate(input_handler.input_feed), fps):
         output_update = {
             'iteration': i,
             'feed_iteration': feed_i,
@@ -92,7 +90,7 @@ def start_detecting_iterations(model, event_generator, tracked_ce, input_feed, o
                 # Add the part to update the frame number for event generation
                 relevant_frames = convert_for_event_generation(relevant_frames, i - feed_i)
 
-                new_events = event_generator.get_events(relevant_frames)
+                new_events = input_handler.event_generator.get_events(relevant_frames)
 
                 # And add the part to convert back into events with the correct id
                 new_events = convert_after_event_generation(new_events, i - feed_i)
@@ -114,7 +112,7 @@ def start_detecting_iterations(model, event_generator, tracked_ce, input_feed, o
             new_evaluation = model.get_probabilities_precompile(
                 existing_timestamps=np.arange(0, i + 1, group_frequency),
                 query_timestamps=[i - group_size + 1],
-                tracked_ce=tracked_ce,
+                tracked_ce=conf['events']['tracked_ce'],
                 input_events=all_events
             )
             output_update['new_evaluation'] = new_evaluation
@@ -148,35 +146,12 @@ def start_detecting_iterations(model, event_generator, tracked_ce, input_feed, o
 
 
 def start_detecting(conf):
-    if conf['logic']['max_window'] < conf['logic']['cep_frequency'] + conf['logic']['group_frequency']:
-        print(
-            'The window of events can not be smaller than the sum of the frequency of checking and grouping',
-            file=sys.stderr
-        )
-        sys.exit(-1)
+    check_logic_parameters(conf)
 
-    if conf['input'].get('video_name') is None:
-        video_class = None
-    else:
-        video_class = conf['input']['video_name'][:-8]
-
-    event_generator = create_event_generator(
-        conf['input']['add_event_generator'],
-        conf['input'].get('interesting_objects'),
-        video_class,
-        conf['input'].get('video_name')
-    )
-
-    input_feed = create_input_feed(
-        conf['input'].get('input_feed_type'),
-        conf['input'].get('audio_file'),
-        conf['input'].get('loop_at'),
-        video_class,
-        conf['input'].get('video_name')
-    )
+    input_handler = InputHandler(conf)
 
     output_handler = OutputHandler(
-        input_feed, conf['events']['tracked_ce'], conf
+        input_handler, conf['events']['tracked_ce'], conf
     )
 
     model = generate_model(
@@ -184,18 +159,20 @@ def start_detecting(conf):
         conf['logic'].get('precompile')
     )
 
-    create_end_loop_triggers(
-        input_feed,
-        conf['input'].get('loop_at'),
-        conf['input'].get('button'),
-        conf['input'].get('post_message')
-    )
-
-    evaluation = start_detecting_iterations(
-        model, event_generator, conf['events']['tracked_ce'], input_feed, output_handler, conf
+    evaluation = detect_from_feeds(
+        model, input_handler, output_handler, conf
     )
 
     output_handler.terminate_outputs(evaluation)
+
+
+def check_logic_parameters(conf):
+    if conf['logic']['max_window'] < conf['logic']['cep_frequency'] + conf['logic']['group_frequency']:
+        print(
+            'The window of events can not be smaller than the sum of the frequency of checking and grouping',
+            file=sys.stderr
+        )
+        sys.exit(-1)
 
 
 @click.command()

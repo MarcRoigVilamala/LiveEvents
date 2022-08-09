@@ -8,7 +8,7 @@ from output.connection_output.zmqconnection import ZMQConnection
 
 
 class OutputHandler(object):
-    def __init__(self, input_feed, tracked_ce, conf):
+    def __init__(self, input_handler, tracked_ce, conf):
         self.outputs = []
 
         if conf['output'].get('timings'):
@@ -21,7 +21,7 @@ class OutputHandler(object):
         if graph_conf and (graph_conf.get('use_graph') or graph_conf.get('save_graph_to')):
             self.outputs.append(
                 Graph(
-                    graph_conf.get('graph_x_size') or input_feed.get_max_length(),
+                    graph_conf.get('graph_x_size') or input_handler.input_feed.get_max_length(),
                     tracked_ce,
                     conf['events']['ce_threshold'],
                     graph_conf.get('save_graph_to', False),
