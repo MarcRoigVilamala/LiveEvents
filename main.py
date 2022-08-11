@@ -7,7 +7,7 @@ from confs.configuration import *
 from input.eventGeneration.event import Event
 from input.inputHandler import InputHandler
 from output.outputHandler import OutputHandler
-from ProbCEP.model import generate_model, update_evaluation
+from ProbCEP.model import generate_model, update_evaluation, get_framework_files
 
 
 def at_rate(iterable, rate):
@@ -49,7 +49,10 @@ class LiveEvents(object):
         )
 
         self.model = generate_model(
-            [conf['events']['event_definition'], *conf['events']['add_to_model']],
+            [
+                *conf['events']['event_definition'],
+                *get_framework_files(conf['events']['use_framework'])
+            ],
             conf['logic'].get('precompile')
         )
 
@@ -194,7 +197,10 @@ class LiveEvents(object):
     '--tracked_ce', multiple=True, type=str,
     help='Name of the complex event that needs to be tracked. Use multiple times to track multiple complex events.'
 )
-@click.option('--event_definition', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
+@click.option(
+    '--event_definition', '--add_to_model', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    multiple=True, help='File defining the rules for the complex events. Use multiple times for multiple files.'
+)
 @click.option(
     '--input_feed_type', type=click.Choice([
         'VideoFeed',
@@ -205,8 +211,13 @@ class LiveEvents(object):
     help='Should represent the type of input stream being used'
 )
 @click.option(
-    '--add_to_model', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True), multiple=True,
-    help='Further ProbLog files to be added to the model generation'
+    '--use_framework', multiple=True,
+    type=click.Choice(
+        [
+            'sequence',
+            'eventCalculus'
+        ]
+    )
 )
 @click.option(
     '--add_event_generator', multiple=True,
@@ -299,7 +310,7 @@ class LiveEvents(object):
     '-p', '--zmq_port', default=9999, type=int, help='Port to use for the ZeroMQ connection'
 )
 @click.option(
-    '--ce_threshold', default=0.5, type=float, help='Threshold for above which probability we detect a complex event'
+    '--ce_threshold', type=float, help='Threshold for above which probability we detect a complex event'
 )
 @click.option(
     '--video_scale', help='Scale of the video'

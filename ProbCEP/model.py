@@ -17,6 +17,20 @@ from input.eventGeneration.event import Event
 from preCompilation.PreCompilation import PreCompilationArguments
 
 
+FRAMEWORK_LIBRARY = {
+    'sequence': 'ProbCEP/ProbLogFiles/sequence.pl',
+    'eventCalculus': 'ProbCEP/ProbLogFiles/prob_ec_cached.pl'
+}
+
+
+def get_framework_files(frameworks):
+    # Wil break if the framework is not the library
+    return [
+        FRAMEWORK_LIBRARY[f]
+        for f in frameworks
+    ]
+
+
 class Model(object):
     def __init__(self, event_definition_files=(), precompile_arguments=None):
         # The base model will be formed from the base ProbLog files that define EC

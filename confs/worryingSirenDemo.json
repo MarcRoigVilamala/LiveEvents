@@ -17,11 +17,13 @@
             "ceGunShot",
             "ceWorryingSiren"
         ],
-        "event_definition": "rules/worryingSirenDemo/event_defs.pl",
-        "add_to_model": [
-            "rules/worryingSirenDemo/prevTimestamp.pl",
-            "ProbCEP/ProbLogFiles/prob_ec_cached.pl",
-            "ProbCEP/ProbLogFiles/sequence.pl"
+        "event_definition": [
+            "rules/worryingSirenDemo/event_defs.pl",
+            "rules/worryingSirenDemo/prevTimestamp.pl"
+        ],
+        "use_framework": [
+            "sequence",
+            "eventCalculus"
         ],
         "ce_threshold": 0.5
     },
