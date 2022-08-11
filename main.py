@@ -24,155 +24,165 @@ def at_rate(iterable, rate):
         yield v
 
 
-def convert_for_event_generation(relevant_frames, diff):
-    return [
-        (i - diff, frame)
-        for i, frame in relevant_frames
-    ]
+class LiveEvents(object):
+    def __init__(self, conf):
+        self.conf = conf
 
+        # Get the required values from the configuration
+        self.max_window = conf['logic']['max_window']
+        self.cep_frequency = conf['logic']['cep_frequency']
+        self.group_size = conf['logic']['group_size']
+        self.group_frequency = conf['logic']['group_frequency']
 
-def convert_after_event_generation(events, diff):
-    return [
-        Event(e.timestamp + diff, e.identifier, e.probability, e.event_type)
-        for e in events
-    ]
+        self.ce_threshold = conf['events']['ce_threshold']
+        self.tracked_ce = conf['events']['tracked_ce']
 
+        self.fps = conf['misc'].get('fps', 30.0)
 
-def event_exists_in(event, event_list):
-    for e in event_list:
-        if e.timestamp == event.timestamp and e.identifier == event.identifier:
-            return True
+        self.check_logic_parameters()
 
-    return False
+        # Generate handlers
+        self.input_handler = InputHandler(self.conf)
 
+        self.output_handler = OutputHandler(
+            self.input_handler, conf['events']['tracked_ce'], conf
+        )
 
-def detect_from_feeds(model, input_handler, output_handler, conf):
-    # Get the required values from the configuration
-    max_window = conf['logic']['max_window']
-    cep_frequency = conf['logic']['cep_frequency']
-    group_size = conf['logic']['group_size']
-    group_frequency = conf['logic']['group_frequency']
+        self.model = generate_model(
+            [conf['events']['event_definition'], *conf['events']['add_to_model']],
+            conf['logic'].get('precompile')
+        )
 
-    ce_threshold = conf['events']['ce_threshold']
+        # Initialize values
+        self.evaluation = {}
 
-    fps = conf['misc'].get('fps', 30.0)
+        self.complex_events = []
 
-    # Initialize the values
-    evaluation = {}
+        self.window = []
+        self.all_events = []  # All events will contain all the simple and complex events in the window
 
-    window = []
-    all_events = []  # All events will contain all the simple and complex events in the window
+        self.last_complex_event = []
+        self.current_complex_event = []
 
-    complex_events = []
+    def check_logic_parameters(self):
+        if self.max_window < self.cep_frequency + self.group_frequency:
+            print(
+                'The window of events can not be smaller than the sum of the frequency of checking and grouping',
+                file=sys.stderr
+            )
+            sys.exit(-1)
 
-    last_complex_event = []
-    current_complex_event = []
+    @staticmethod
+    def convert_for_event_generation(relevant_frames, diff):
+        return [
+            (i - diff, frame)
+            for i, frame in relevant_frames
+        ]
 
-    for i, (feed_i, frame) in at_rate(enumerate(input_handler.input_feed), fps):
-        output_update = {
-            'iteration': i,
-            'feed_iteration': feed_i,
-            'frame': frame  # Frame is the non-symbolic piece of information from the input stream
-        }
+    @staticmethod
+    def convert_after_event_generation(events, diff):
+        return [
+            Event(e.timestamp + diff, e.identifier, e.probability, e.event_type)
+            for e in events
+        ]
 
-        # Keep only the number of frames we need
-        window.append((i, frame))
-        window = window[-group_size:]
+    @staticmethod
+    def event_exists_in(event, event_list):
+        for e in event_list:
+            if e.timestamp == event.timestamp and e.identifier == event.identifier:
+                return True
 
+        return False
+
+    def generate_simple_events(self, i, feed_i):
         # Every group_frequency, get the relevant events
-        if not (i + 1) % group_frequency:
-            # print("Generating events at {} for {} to {}".format(i, i - group_size + 1, i))
-
+        if not (i + 1) % self.group_frequency:
             # Check that we have enough frames for the group (preventing errors on first iterations)
-            if len(window) >= group_size:
-                relevant_frames = window[-group_size:]
+            if len(self.window) >= self.group_size:
+                relevant_frames = self.window[-self.group_size:]
 
                 # Add the part to update the frame number for event generation
-                relevant_frames = convert_for_event_generation(relevant_frames, i - feed_i)
+                relevant_frames = self.convert_for_event_generation(relevant_frames, i - feed_i)
 
-                new_events = input_handler.event_generator.get_events(relevant_frames)
+                new_events = self.input_handler.event_generator.get_events(relevant_frames)
 
                 # And add the part to convert back into events with the correct id
-                new_events = convert_after_event_generation(new_events, i - feed_i)
+                new_events = self.convert_after_event_generation(new_events, i - feed_i)
 
                 for e in new_events:
-                    if not event_exists_in(e, all_events):
-                        all_events.append(e)
+                    if not self.event_exists_in(e, self.all_events):
+                        self.all_events.append(e)
+
+    def generate_complex_events(self, i, output_update):
+        new_evaluation = {}
+        new_complex_events = []
 
         # Every cep_frequency frames, run the CEP part with the relevant events
         # The i - group_size >= -1 is for the first iteration, where we do not have all the relevant frames
-        if not (i + 1) % cep_frequency and i - group_size >= -1:
+        if not (i + 1) % self.cep_frequency and i - self.group_size >= -1:
             # print("Executing problog at {} for {} to {}".format(i, i - max_window + 1, i))
 
             # Remove the events that happened before the current window
-            while all_events and all_events[0].timestamp < i - max_window:
+            while self.all_events and self.all_events[0].timestamp < i - self.max_window:
                 # While we have events and the first event is before the current window, remove the first event
-                all_events = all_events[1:]
+                self.all_events = self.all_events[1:]
 
-            new_evaluation = model.get_probabilities_precompile(
-                existing_timestamps=np.arange(0, i + 1, group_frequency),
-                query_timestamps=[i - group_size + 1],
-                tracked_ce=conf['events']['tracked_ce'],
-                input_events=all_events
+            new_evaluation = self.model.get_probabilities_precompile(
+                existing_timestamps=np.arange(0, i + 1, self.group_frequency),
+                query_timestamps=[i - self.group_size + 1],
+                tracked_ce=self.tracked_ce,
+                input_events=self.all_events
             )
-            output_update['new_evaluation'] = new_evaluation
 
             new_events = Event.from_evaluation(new_evaluation)
-
-            all_events += new_events
-
-            evaluation = update_evaluation(evaluation, new_evaluation)
-            output_update['evaluation'] = evaluation
+            self.all_events += new_events
 
             new_complex_events = [
                 e
                 for e in new_events
-                if e.probability > ce_threshold
+                if e.probability > self.ce_threshold
             ]
+
+            self.update_current_complex_event(new_complex_events)
+
+            output_update['new_evaluation'] = new_evaluation
             output_update['new_complex_events'] = new_complex_events
+            output_update['last_complex_event'] = self.last_complex_event
 
-            if new_complex_events:
-                current_complex_event += new_complex_events
-            else:
-                last_complex_event = current_complex_event
-                current_complex_event = []
-            output_update['last_complex_event'] = last_complex_event
+        return new_evaluation, new_complex_events
 
-            complex_events += new_complex_events
+    def update_current_complex_event(self, new_complex_events):
+        if new_complex_events:
+            self.current_complex_event += new_complex_events
+        else:
+            self.last_complex_event = self.current_complex_event
+            self.current_complex_event = []
 
-        output_handler.update(output_update)
+    def start_detecting(self):
+        for i, (feed_i, frame) in at_rate(enumerate(self.input_handler.input_feed), self.fps):
+            output_update = {
+                'iteration': i,
+                'feed_iteration': feed_i,
+                'frame': frame  # Frame is the non-symbolic piece of information from the input stream
+            }
 
-    return evaluation
+            # Keep only the number of frames we need
+            self.window.append((i, frame))
+            self.window = self.window[-self.group_size:]
 
+            self.generate_simple_events(i, feed_i)
 
-def start_detecting(conf):
-    check_logic_parameters(conf)
+            new_evaluation, new_complex_events = self.generate_complex_events(i, output_update)
 
-    input_handler = InputHandler(conf)
+            self.evaluation = update_evaluation(self.evaluation, new_evaluation)
+            output_update['evaluation'] = self.evaluation
+            self.complex_events += new_complex_events
 
-    output_handler = OutputHandler(
-        input_handler, conf['events']['tracked_ce'], conf
-    )
+            self.output_handler.update(output_update)
 
-    model = generate_model(
-        [conf['events']['event_definition'], *conf['events']['add_to_model']],
-        conf['logic'].get('precompile')
-    )
+        self.output_handler.terminate_outputs(self.evaluation)
 
-    evaluation = detect_from_feeds(
-        model, input_handler, output_handler, conf
-    )
-
-    output_handler.terminate_outputs(evaluation)
-
-
-def check_logic_parameters(conf):
-    if conf['logic']['max_window'] < conf['logic']['cep_frequency'] + conf['logic']['group_frequency']:
-        print(
-            'The window of events can not be smaller than the sum of the frequency of checking and grouping',
-            file=sys.stderr
-        )
-        sys.exit(-1)
+        return self.evaluation
 
 
 @click.command()
@@ -315,7 +325,9 @@ def main(conf, *args, **kwargs):
         conf = create_configuration(*args, **kwargs)
     # save_configuration(remove_empty_values(conf), 'confs/worryingSirenDemo.json')
 
-    start_detecting(conf)
+    liveEvents = LiveEvents(conf)
+
+    liveEvents.start_detecting()
 
 
 if __name__ == '__main__':
