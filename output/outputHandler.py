@@ -1,10 +1,8 @@
-from output.audio import Audio
-from output.graph import Graph
-from output.sue import initialize_sue_connection
 from output.text import Text
+from output.cleanText import CleanText
 from output.timings import Timings
-from output.video import Video
-from output.connection_output.zmqconnection import ZMQConnection
+from output.graph import Graph
+# If your output requires uncommon libraries, use local imports to avoid forcing them for unrelated functions
 
 
 class OutputHandler(object):
@@ -16,6 +14,9 @@ class OutputHandler(object):
 
         if conf['output'].get('text'):
             self.outputs.append(Text())
+
+        if conf['output'].get('clean_text'):
+            self.outputs.append(CleanText())
 
         graph_conf = conf['output'].get('graph')
         if graph_conf and (graph_conf.get('use_graph') or graph_conf.get('save_graph_to')):
@@ -31,6 +32,7 @@ class OutputHandler(object):
 
         video_conf = conf['output'].get('video')
         if video_conf and video_conf.get('play_video'):
+            from output.video import Video
             self.outputs.append(
                 Video(
                     video_conf.get('video_x_position', 1000),
@@ -41,15 +43,17 @@ class OutputHandler(object):
                 )
             )
 
-        zmq_conf = conf['output'].get('zmq_address')
+        zmq_conf = conf['output'].get('zmq')
         if zmq_conf:
+            from output.connection_output.zmqconnection import ZMQConnection
             self.outputs.append(ZMQConnection(zmq_conf['zmq_address'], zmq_conf['zmq_port']))
 
-        sue_connection = initialize_sue_connection(conf['output'].get('sue_address'))
-        if sue_connection:
-            self.outputs.append(sue_connection)
+        if conf['output'].get('sue_address'):
+            from output.sue import SUEConnection
+            self.outputs.append(SUEConnection(conf['output']['sue_address']))
 
         if conf['output'].get('play_audio'):
+            from output.audio import Audio
             self.outputs.append(Audio(conf['input']['audio_file']))
 
     def finish_initialization(self):

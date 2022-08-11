@@ -57,15 +57,3 @@ class SUEConnection(LiveEventsOutput):
             sue_event["slctRevVideo"] = file_ref
 
         self.post_to_sue([sue_event])
-
-
-def initialize_sue_connection(sue_address):
-    if sue_address:
-        if SUEConnection is not None:
-            sue_connection = SUEConnection(sue_address)
-        else:
-            print("SUE Connection could not be imported", file=sys.stderr)
-            sue_connection = None
-    else:
-        sue_connection = None
-    return sue_connection
