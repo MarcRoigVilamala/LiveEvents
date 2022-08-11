@@ -334,6 +334,8 @@ def main(conf, *args, **kwargs):
         )
     else:
         conf = create_configuration(*args, **kwargs)
+
+    assert check_conf_format(conf)
     # save_configuration(remove_empty_values(conf), 'confs/worryingSirenDemo.json')
 
     live_events = LiveEvents(conf)

@@ -11,8 +11,6 @@ def parse_configuration(conf_filename):
     with open(conf_filename, 'r') as f:
         conf = json.load(f)
 
-    assert check_conf_format(conf)
-
     return conf
 
 
@@ -73,13 +71,13 @@ def create_configuration(tracked_ce, event_definition, input_feed_type, use_fram
         }
     }
 
-    assert check_conf_format(conf)
+    conf = remove_empty_values(conf)
 
     return conf
 
 
 def update_configuration_values(conf, *args, **kwargs):
-    update_with = remove_empty_values(create_configuration(*args, **kwargs))
+    update_with = create_configuration(*args, **kwargs)
 
     for general_key, general_value in conf.items():
         for update_key, update_value in update_with[general_key].items():
@@ -87,14 +85,10 @@ def update_configuration_values(conf, *args, **kwargs):
 
     conf = remove_empty_values(conf)
 
-    assert check_conf_format(conf)
-
     return conf
 
 
 def remove_empty_values(conf):
-    assert check_conf_format(conf)
-
     new_conf = {
         general_key: {
             subkey: value
@@ -103,8 +97,6 @@ def remove_empty_values(conf):
         }
         for general_key, general_value in conf.items()
     }
-
-    assert check_conf_format(new_conf)
 
     return new_conf
 
