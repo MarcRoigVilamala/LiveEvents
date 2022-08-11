@@ -1,7 +1,6 @@
-opencv-python
-Click==7.0
+Click>=7.0
 matplotlib
-numpy==1.16.0
+numpy>=1.19.1
 problog
-
 pandas
+ProblogPreCompilation
