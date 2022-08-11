@@ -1,10 +1,51 @@
 import json
 
+# Use / to define keys for the sub-dictionaries
+import sys
+
+REQUIRED_FIELDS = [
+    'input',
+    'output',
+    'events',
+    'logic',
+    'misc',
+    'input/input_feed_type',
+    'input/add_event_generator',
+    'events/tracked_ce',
+    'events/event_definition',
+    'events/ce_threshold',
+    'logic/max_window',
+    'logic/cep_frequency',
+    'logic/group_size',
+    'logic/group_frequency',
+]
+
 
 def check_conf_format(conf):
-    # TODO: Check interior values
+    missing = []
 
-    return 'input' in conf and 'output' in conf and 'events' in conf and 'misc' in conf
+    for field in REQUIRED_FIELDS:
+        keypath = field.split('/')
+
+        current_dict = conf
+        while keypath:
+            key = keypath[0]
+            if key not in current_dict:
+                missing.append(
+                    'The key {} is missing from the required field {}'.format(key, field)
+                )
+                break
+            else:
+                current_dict = current_dict[key]
+                keypath = keypath[1:]
+
+    if missing:
+        for m in missing:
+            print(m, file=sys.stderr)
+
+        return False
+
+    return True
 
 
 def parse_configuration(conf_filename):

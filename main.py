@@ -51,7 +51,7 @@ class LiveEvents(object):
         self.model = generate_model(
             [
                 *conf['events']['event_definition'],
-                *get_framework_files(conf['events']['use_framework'])
+                *get_framework_files(conf['events'].get('use_framework', []))
             ],
             conf['logic'].get('precompile')
         )
@@ -335,7 +335,7 @@ def main(conf, *args, **kwargs):
     else:
         conf = create_configuration(*args, **kwargs)
 
-    assert check_conf_format(conf)
+    assert check_conf_format(conf), "Incorrect configuration. Some required fields are likely missing (see above)"
     # save_configuration(remove_empty_values(conf), 'confs/worryingSirenDemo.json')
 
     live_events = LiveEvents(conf)
