@@ -227,7 +227,7 @@ class LiveEvents(object):
 )
 @click.option(
     '--audio_file', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help='Audio file. Should be included if AudioFeed is selected as the INPUT_FEED_TYPE'
+    help='Audio file. Should be included if AudioFeed is selected as the input_feed_type'
 )
 @click.option(
     '-w', '--max_window', type=int,  # default=32,
@@ -325,9 +325,9 @@ def main(conf, *args, **kwargs):
         conf = create_configuration(*args, **kwargs)
     # save_configuration(remove_empty_values(conf), 'confs/worryingSirenDemo.json')
 
-    liveEvents = LiveEvents(conf)
+    live_events = LiveEvents(conf)
 
-    liveEvents.start_detecting()
+    live_events.start_detecting()
 
 
 if __name__ == '__main__':

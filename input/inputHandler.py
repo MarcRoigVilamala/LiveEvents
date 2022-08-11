@@ -10,17 +10,17 @@ class InputHandler(object):
         else:
             video_class = conf['input']['video_name'][:-8]
 
-        self.event_generator = create_event_generator(
-            conf['input']['add_event_generator'],
-            conf['input'].get('interesting_objects'),
+        self.input_feed = create_input_feed(
+            conf['input']['input_feed_type'],
+            conf['input'].get('audio_file'),
+            conf['input'].get('loop_at'),
             video_class,
             conf['input'].get('video_name')
         )
 
-        self.input_feed = create_input_feed(
-            conf['input'].get('input_feed_type'),
-            conf['input'].get('audio_file'),
-            conf['input'].get('loop_at'),
+        self.event_generator = create_event_generator(
+            conf['input']['add_event_generator'],
+            conf['input'].get('interesting_objects'),
             video_class,
             conf['input'].get('video_name')
         )

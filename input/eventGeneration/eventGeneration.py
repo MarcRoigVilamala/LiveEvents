@@ -1,10 +1,7 @@
 import itertools
 
-import torch
-
-from input.eventGeneration.Neuroplytorch.fromAudioNeuroplytorch import generate_audio_neuroplytorch_event_gen
-from input.eventGeneration.fromAudioNN import SoundVGGish, FromAudioNN
 from input.eventGeneration.fromFileEvents import FromFileEventGenerator
+# If your event generation requires uncommon libraries, use local imports to avoid adding them to requirements
 
 
 class EventGenerator(object):
@@ -58,6 +55,9 @@ def create_event_generator(event_generator_types, interesting_objects, video_cla
         #         ]
         #     )
         elif event_gen_type == 'FromAudioNN':
+            import torch
+            from input.eventGeneration.fromAudioNN import SoundVGGish, FromAudioNN
+
             classes = [
                 'airConditioner',
                 'carHorn',
@@ -80,6 +80,9 @@ def create_event_generator(event_generator_types, interesting_objects, video_cla
                 classes=classes, network=network
             )
         elif event_gen_type == 'FromLiveAudioNN':
+            import torch
+            from input.eventGeneration.fromAudioNN import SoundVGGish, FromAudioNN
+
             classes = [
                 'silence',
                 'speech',
@@ -94,6 +97,8 @@ def create_event_generator(event_generator_types, interesting_objects, video_cla
                 classes=classes, network=network
             )
         elif 'FromAudioNeuroplytorch':
+            from input.eventGeneration.Neuroplytorch.fromAudioNeuroplytorch import \
+                generate_audio_neuroplytorch_event_gen
             if generate_audio_neuroplytorch_event_gen is None:
                 raise Exception(
                     "FromAudioNeuroplytorch cannot be used due to ImportError. Ensure pytorch_lightning is installed"
