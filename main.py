@@ -1,4 +1,3 @@
-import sys
 import time
 import click
 import numpy as np
@@ -217,7 +216,8 @@ class LiveEvents(object):
             'sequence',
             'eventCalculus'
         ]
-    )
+    ),
+    help='Add to make use of a framework. Use multiple times for multiple frameworks.'
 )
 @click.option(
     '--add_event_generator', multiple=True,

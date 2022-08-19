@@ -4,27 +4,29 @@ This is a system designed to detect complex events from a given input feed.
 
 Usage:
 
-``python main.py [OPTIONS] EXPECTED_EVENTS EVENT_DEFINITION [VideoFeed|LiveAudioFeed|AudioFeed]``
+``python main.py [OPTIONS]``
 
-Where:
+Where options can include any of the following:
 
-`EXPECTED_EVENTS` is the path to a text file where each line specifies the name of one of the complex events we are expecting.
+## Configuration
 
-`EVENT_DEFINITION` is the path to a ProbLog file defining the rules for the complex events.
-
-The feed type can be used to define what type of input feed should be used. This allows to choose between a video file, an audio file or live audio from the microphone. If an audio file is used, `--audio_file path/to/file` must be used to define which audio file should be processed. If a video file is used, `--video_name TEXT` should be used instead to indicate the name of the video file.
+`--conf path/to/file.json` can be used to load a JSON file with a pre-defined configuration. The values for this configuration can be modified using the rest of the options.
 
 ## Further options
 
-Many more options can be used to add or change behaviours of the system.
+### Event definition
 
-### Adding further ProbLog files
+`--tracked_ce` Name of the complex event that needs to be tracked. Use multiple times to track multiple complex events.
 
-Further ProbLog files can be added using the option `--add_to_model path/to/file`. This can be used to add the frameworks provided by the system, as well as any other file.
+`--event_definition`, `--add_to_model` Either of these can be used to add a ProbLog file to the model defining the rules for the complex events. Can be used multiple times to add multiple files.
 
-`--add_to_model PyProbEC/ProbLogFiles/prob_ec_cached.pl` can be used to allow event calculus inspired definitions of complex events.
+`--use_framework [sequence|eventCalculus]` Can be used to make use of a framework in the rule definitions. Can be used multiple times to add multiple frameworks.
 
-`--add_to_model PyProbEC/ProbLogFiles/sequence.pl` can be used to add the sequence framework, which allows users to detect patterns from the given input feed.
+### Adding input feed types
+
+`--input_feed_type [VideoFeed|LiveAudioFeed|AudioFeed]` can be used to add a feed type.
+
+The feed type can be used to define what type of input feed should be used. This allows to choose between a video file, an audio file or live audio from the microphone. If an audio file is used, `--audio_file path/to/file` must be used to define which audio file should be processed. If a video file is used, `--video_name TEXT` should be used instead to indicate the name of the video file.
 
 ### Adding event generators
 
@@ -131,13 +133,20 @@ These are other options that may be used that don't fall into any of the classif
 ## Execution Examples
 
 ````
-python main.py rules/worryingSirenDemo/all_events.txt rules/worryingSirenDemo/event_defs.pl AudioFeed --add_to_model rules/worryingSirenDemo/prevTimestamp.pl --add_to_model ProbCEP/ProbLogFiles/prob_ec_cached.pl --add_to_model ProbCEP/ProbLogFiles/sequence.pl --add_event_generator FromAudioNN --audio_file ~/thesis/audios/demo_audio_gunshots.wav --fps 9999 --text --cep_frequency 1 --group_size 1 --group_frequency 1 --precompile rules/worryingSirenDemo/worryingSiren_precompile_args.json --graph
+python main.py confs/worryingSirenDemo.json
 ````
 
+<!---
+````
+python main.py rules/worryingSirenDemo/all_events.txt rules/worryingSirenDemo/event_defs.pl AudioFeed --add_to_model rules/worryingSirenDemo/prevTimestamp.pl --add_to_model ProbCEP/ProbLogFiles/prob_ec_cached.pl --add_to_model ProbCEP/ProbLogFiles/sequence.pl --add_event_generator FromAudioNN --audio_file ~/thesis/audios/demo_audio_gunshots.wav --fps 9999 --text --cep_frequency 1 --group_size 1 --group_frequency 1 --precompile rules/worryingSirenDemo/worryingSiren_precompile_args.json --graph
+````
+>
 
+<!---
 ````
 python main.py anomalyDetection/expected_events.txt anomalyDetection/event_defs.pl VideoFeed --add_event_generator File3DResNet --add_event_generator FileAtLeast --add_event_generator FileOverlapping --add_to_model anomalyDetection/videoPrevTimestamp.pl --add_to_model PyProbEC/ProbLogFiles/prob_ec_cached.pl --add_to_model PyProbEC/ProbLogFiles/sequence.pl -o anomalyDetection/interesting_objects.txt --graph_x_size 500 --fps 99999 --video_name Fighting006_x264 --text --precompile anomalyDetection/full_precompile_args.json
 ````
+>
 
 <!---
 ``python main.py rules/expected_events.txt rules/event_defs.pl --graph_x_size 500 -o rules/interesting_objects.txt --precompile rules/full_precompile_args.json --text --graph --video --video_name Fighting006_x264 --loop_at 24 --post_message --address 127.0.0.1 -p 5556``
