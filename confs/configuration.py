@@ -55,11 +55,12 @@ def parse_configuration(conf_filename):
     return conf
 
 
-def create_configuration(tracked_ce, event_definition, input_feed_type, use_framework, add_event_generator, audio_file,
-                         max_window, cep_frequency, group_size, group_frequency, graph_x_size, interesting_objects, fps,
-                         precompile, text, clean_text, timings, use_graph, play_audio, play_video, video_name,
-                         video_x_position, video_y_position, loop_at, button, post_message, zmq_address, zmq_port,
-                         ce_threshold, video_scale, mark_objects, save_graph_to, sue_address):
+def create_configuration(save_conf_as, tracked_ce, event_definition, input_feed_type, use_framework,
+                         add_event_generator, audio_file, max_window, cep_frequency, group_size, group_frequency,
+                         graph_x_size, interesting_objects, fps, precompile, text, clean_text, timings, use_graph,
+                         play_audio, play_video, video_name, video_x_position, video_y_position, loop_at, button,
+                         post_message, zmq_address, zmq_port, ce_threshold, video_scale, mark_objects, save_graph_to,
+                         sue_address):
     conf = {
         'input': {
             'input_feed_type': input_feed_type,
@@ -108,7 +109,8 @@ def create_configuration(tracked_ce, event_definition, input_feed_type, use_fram
             'precompile': precompile
         },
         'misc': {
-            'fps': fps
+            'fps': fps,
+            'save_conf_as': save_conf_as
         }
     }
 
@@ -144,6 +146,10 @@ def remove_empty_values(conf):
 
 def save_configuration(conf, conf_filename):
     assert check_conf_format(conf)
+
+    # Ensure that the configuration will not be overwritten every time by not saving the "save_conf_as" parameter
+    if 'save_conf_as' in conf['misc']:
+        del conf['misc']['save_conf_as']
 
     with open(conf_filename, 'w') as f:
         json.dump(conf, f, indent=4)

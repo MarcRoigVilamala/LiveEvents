@@ -193,6 +193,10 @@ class LiveEvents(object):
     help='Configuration file to use. Values from the file can be overwritten using other command line arguments.'
 )
 @click.option(
+    '--save_conf_as', type=click.Path(file_okay=True, dir_okay=False, writable=True),
+    help='Save the configuration used as a file. Can be used with or without --conf.'
+)
+@click.option(
     '--tracked_ce', multiple=True, type=str,
     help='Name of the complex event that needs to be tracked. Use multiple times to track multiple complex events.'
 )
@@ -336,7 +340,10 @@ def main(conf, *args, **kwargs):
         conf = create_configuration(*args, **kwargs)
 
     assert check_conf_format(conf), "Incorrect configuration. Some required fields are likely missing (see above)"
-    # save_configuration(remove_empty_values(conf), 'confs/worryingSirenDemo.json')
+
+    save_conf_as = conf['misc'].get('save_conf_as')
+    if save_conf_as:
+        save_configuration(remove_empty_values(conf), save_conf_as)
 
     live_events = LiveEvents(conf)
 
