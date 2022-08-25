@@ -4,6 +4,8 @@ import numpy as np
 
 from confs.configuration import *
 from input.eventGeneration.event import Event
+from input.eventGeneration.eventGeneration import event_generators
+from input.feed.inputFeedHandling import input_feeds
 from input.inputHandler import InputHandler
 from output.outputHandler import OutputHandler
 from ProbCEP.model import generate_model, update_evaluation, get_framework_files
@@ -205,12 +207,7 @@ class LiveEvents(object):
     multiple=True, help='File defining the rules for the complex events. Use multiple times for multiple files.'
 )
 @click.option(
-    '--input_feed_type', type=click.Choice([
-        'VideoFeed',
-        'LiveAudioFeed',
-        'AudioFeed',
-        # 'DemoAudioFeed'
-    ]),
+    '--input_feed_type', type=click.Choice(input_feeds.keys()),
     help='Should represent the type of input stream being used'
 )
 @click.option(
@@ -225,19 +222,7 @@ class LiveEvents(object):
 )
 @click.option(
     '--add_event_generator', multiple=True,
-    type=click.Choice(
-        [
-            'File3DResNet',
-            'FileAtLeast',
-            'FileOverlapping',
-            'ObjectDetector',
-            'Video',
-            'FromAudioNN',
-            'FromLiveAudioNN',
-            'FromAudioNeuroplytorch',
-            # 'DemoFromAudioNN'
-        ]
-    ),
+    type=click.Choice(event_generators.keys()),
     help='Event generators process the input feed each iteration and extract the events from it'
 )
 @click.option(
