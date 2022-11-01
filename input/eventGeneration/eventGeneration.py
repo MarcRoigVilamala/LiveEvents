@@ -19,37 +19,37 @@ class EventGenerator(object):
         )
 
 
-def create_file_3d_res_net_generator(conf):
-    video_name = conf['input'].get('video_name')
+def create_file_3d_res_net_generator(conf, event_gen_conf):
+    video_name = conf['input']['input_feed'].get('video_name')
     if conf['input'].get('video_name') is None:
         video_class = None
     else:
-        video_class = video_name
+        video_class = video_name.split('_')[:-3]
 
     return FromFileEventGenerator('data/ProbLogEvents/{}/3DResNet/{}.pl'.format(video_class, video_name))
 
 
-def create_file_at_least_generator(conf):
-    video_name = conf['input'].get('video_name')
+def create_file_at_least_generator(conf, event_gen_conf):
+    video_name = conf['input']['input_feed'].get('video_name')
     if conf['input'].get('video_name') is None:
         video_class = None
     else:
-        video_class = video_name
+        video_class = video_name.split('_')[:-3]
 
     return FromFileEventGenerator('data/ProbLogEvents/{}/AtLeast/{}.pl'.format(video_class, video_name))
 
 
-def create_file_overlapping_generator(conf):
-    video_name = conf['input'].get('video_name')
+def create_file_overlapping_generator(conf, event_gen_conf):
+    video_name = conf['input']['input_feed'].get('video_name')
     if conf['input'].get('video_name') is None:
         video_class = None
     else:
-        video_class = video_name
+        video_class = video_name.split('_')[:-3]
 
     return FromFileEventGenerator('data/ProbLogEvents/{}/Overlapping/{}.pl'.format(video_class, video_name))
 
 
-def create_object_detector_generator(conf):
+def create_object_detector_generator(conf, event_gen_conf):
     import sys
     # TODO: Fix this
     print(
@@ -58,32 +58,40 @@ def create_object_detector_generator(conf):
     )
     from input.eventGeneration.objectDetection.objectDetection import ObjectDetectorEventGenerator
 
-    interesting_objects = conf['input'].get('interesting_objects')
+    interesting_objects = event_gen_conf.get('interesting_objects')
 
     event_gen = ObjectDetectorEventGenerator(interesting_objects)
     return event_gen
 
 
-def create_audio_generator(conf):
+def create_audio_generator(conf, event_gen_conf):
     import torch
     from input.eventGeneration.fromAudioNN import SoundVGGish, FromAudioNN
 
-    classes = [
-        'airConditioner',
-        'carHorn',
-        'childrenPlaying',
-        'dogBark',
-        'drilling',
-        'engineIdling',
-        'gunShot',
-        'jackhammer',
-        'siren',
-        'streetMusic'
-    ]
+    classes = event_gen_conf.get(
+        'classes',
+        [
+            'airConditioner',
+            'carHorn',
+            'childrenPlaying',
+            'dogBark',
+            'drilling',
+            'engineIdling',
+            'gunShot',
+            'jackhammer',
+            'siren',
+            'streetMusic'
+        ]
+    )
 
     network = SoundVGGish(len(classes))
     network.load_state_dict(
-        torch.load('neuralNetworkWeights/neural_network_scenario100_2_1000_noise_0_00_epoch_0008.pt')
+        torch.load(
+            event_gen_conf.get(
+                'weights',
+                'neuralNetworkWeights/neural_network_scenario100_2_1000_noise_0_00_epoch_0008.pt'
+            )
+        )
     )
 
     return FromAudioNN(
@@ -91,18 +99,26 @@ def create_audio_generator(conf):
     )
 
 
-def create_live_audio_generator(conf):
+def create_live_audio_generator(conf, event_gen_conf):
     import torch
     from input.eventGeneration.fromAudioNN import SoundVGGish, FromAudioNN
 
-    classes = [
-        'silence',
-        'speech',
-    ]
+    classes = event_gen_conf.get(
+        'classes',
+        [
+            'silence',
+            'speech',
+        ]
+    )
 
     network = SoundVGGish(len(classes))
     network.load_state_dict(
-        torch.load('neuralNetworkWeights/neural_network_scenario303_5_noise_0_00_epoch_0004.pt')
+        torch.load(
+            event_gen_conf.get(
+                'weights',
+                'neuralNetworkWeights/neural_network_scenario303_5_noise_0_00_epoch_0004.pt'
+            )
+        )
     )
 
     return FromAudioNN(
@@ -110,14 +126,22 @@ def create_live_audio_generator(conf):
     )
 
 
-def create_audio_neuroplytorch_generator(conf):
+def create_audio_neuroplytorch_generator(conf, event_gen_conf):
     from input.eventGeneration.Neuroplytorch.fromAudioNeuroplytorch import \
         generate_audio_neuroplytorch_event_gen
 
     return generate_audio_neuroplytorch_event_gen()
 
 
-event_generators = {
+def create_nlp_generator(conf, event_gen_conf):
+    from input.eventGeneration.fromNLP import FromNLP
+    return FromNLP(
+        model_name=event_gen_conf.get("model_name"),
+        ignore=event_gen_conf.get("ignore", set())
+    )
+
+
+available_event_generators = {
     'File3DResNet': create_file_3d_res_net_generator,
     'FileAtLeast': create_file_at_least_generator,
     'FileOverlapping': create_file_overlapping_generator,
@@ -125,23 +149,26 @@ event_generators = {
     'FromAudioNN': create_audio_generator,
     'FromLiveAudioNN': create_live_audio_generator,
     'FromAudioNeuroplytorch': create_audio_neuroplytorch_generator,
+    'FromNLP': create_nlp_generator,
 }
 
 
 def create_event_generator(conf):
-    event_generator_types = conf['input']['add_event_generator']
+    conf_event_generators = conf['input']['event_generators']
 
-    if not event_generator_types:
+    if not conf_event_generators:
         raise ValueError("At least one type of Event Generator must be added using --add_event_generator")
 
     event_generation_list = []
 
-    for event_gen_type in event_generator_types:
-        if event_gen_type in event_generators.keys():
+    for event_gen_conf in conf_event_generators:
+        event_gen_type = event_gen_conf['type']
+
+        if event_gen_type in available_event_generators.keys():
             event_generation_list.append(
-                event_generators[event_gen_type](conf)
+                available_event_generators[event_gen_type](conf, event_gen_conf)
             )
         else:
-            raise ValueError("Unexpected value for add_event_generator: {}".format(event_gen_type))
+            raise ValueError("Unexpected value for event generator type: {}".format(event_gen_conf))
 
     return EventGenerator(event_generation_list)
