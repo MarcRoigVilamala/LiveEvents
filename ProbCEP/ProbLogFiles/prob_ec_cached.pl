@@ -4,7 +4,6 @@
 holdsAt_(aux = true, 0).
 
 holdsAt(F = V, T) :-
-  \+ sdFluent(F),
   T @> 0,
   allTimeStamps(Timestamps),
   previousTimeStamp(T, Timestamps, Tprev),
@@ -12,7 +11,6 @@ holdsAt(F = V, T) :-
   \+ broken(F = V, Tprev, T).
 
 holdsAt(F = V, T) :-
-  \+ sdFluent(F),
   T @> 0,
   allTimeStamps(Timestamps),
   previousTimeStamp(T, Timestamps, Tprev),
