@@ -2,15 +2,30 @@ from preCompilation.PreCompilation import InputClause
 
 
 class Event(InputClause):
-    def get_clause_format(self):
-        if self.event_type == 'sound':
-            return '\n{{probability}}::{event_type}({{timestamp}}, {{identifier}}).'.format(
-                event_type=self.event_type
-            )
+    def get_clause_only_format(self):
+        if self.timestamp_first:
+            clause_format = "{event_type}({{timestamp}}, {{identifier}})"
+        else:
+            clause_format = "{event_type}({{identifier}}, {{timestamp}})"
 
-        return '\n{{probability}}::{event_type}({{identifier}}, {{timestamp}}).'.format(
+        return clause_format.format(
             event_type=self.event_type
         )
+
+    def get_clause_format(self):
+        return '\n{{probability}}::{clause}.'.format(
+            clause=self.get_clause_only_format()
+        )
+
+    def get_clause_only_as_str(self):
+        return self.get_clause_only_format().format(
+            identifier=self.identifier,
+            timestamp=self.timestamp
+        )
+
+    @property
+    def timestamp_first(self):
+        return self.event_type in ['sound', 'nlp']
 
     def for_mock_model(self):
         return self.to_problog_with(probability=0.0)
@@ -21,13 +36,21 @@ class Event(InputClause):
 
     @staticmethod
     def from_evaluation(evaluation):
-        return [
-            Event(timestamp=timestamp, event='{} = true'.format(event), probability=prob, event_type='holdsAt_')
-            for event, event_values in evaluation.items()
-            for ids, ids_values in event_values.items()
-            for timestamp, prob in ids_values.items()
+        res = [
+            Event(timestamp=int(e.args[1]), event=str(e.args[0]), probability=prob, event_type='holdsAt_')
+            for e, prob in evaluation.items()
             if prob > 0.0
         ]
+
+        # res = [
+        #     Event(timestamp=timestamp, event='{} = true'.format(event), probability=prob, event_type='holdsAt_')
+        #     for event, event_values in evaluation.items()
+        #     for ids, ids_values in event_values.items()
+        #     for timestamp, prob in ids_values.items()
+        #     if prob > 0.0
+        # ]
+
+        return res
 
     @staticmethod
     def from_file(filename):
@@ -54,8 +77,9 @@ class Event(InputClause):
 
             return res
 
-    def to_nice_string(self):
-        return "{:.3}::{}".format(self.probability, self.identifier)
+    def to_nice_string(self, prob_precision=3):
+        # return "{:.3}::{}".format(self.probability, self.identifier)
+        return f"{self.get_clause_only_as_str()}: {self.probability:.{prob_precision}f}"
 
     def __repr__(self):
         return self.to_problog()
