@@ -6,7 +6,8 @@ from output.liveEventsOutupt import LiveEventsOutput
 
 
 class Graph(LiveEventsOutput):
-    def __init__(self, graph_x_size, tracked_ce, ce_threshold, save_graph_to=None, use_rectangles=True):
+    def __init__(self, graph_x_size, tracked_ce, ce_threshold, save_graph_to=None, use_rectangles=True,
+                 mark_threshold=False):
         self.graph_x_size = graph_x_size
         self.ce_threshold = ce_threshold
         self.use_rectangles = use_rectangles
@@ -29,7 +30,10 @@ class Graph(LiveEventsOutput):
 
             self.colors[event] = self.lines[event].get_color()
 
-        self.previous_x_data_length = 0
+        if mark_threshold:
+            plt.axhline(y=ce_threshold, color='r', linestyle='dashed')
+
+        self.previous_x_data_length = {}
 
         self.last_rectangle = {}
 
@@ -58,36 +62,38 @@ class Graph(LiveEventsOutput):
             else:
                 self.last_rectangle[event] = self.add_rectangle(event, x_data[i - 1], x_data[i])
 
+    def update_graph(self, evaluation):
+        max_data = 0  # Will keep track of the highest value in the x-axis
+        for event, line in self.lines.items():
+            x_data, y_data = zip(*sorted(evaluation[event].items()))
+
+            max_data = max(max(x_data), max_data)
+
+            line.set_xdata(x_data)
+            line.set_ydata(y_data)
+
+            if self.use_rectangles:
+                for i in range(self.previous_x_data_length.get(event, 0), len(x_data)):
+                    if y_data[i] > self.ce_threshold:
+                        self.mark_rectangle_until(event, x_data, i)
+
+            self.previous_x_data_length[event] = len(x_data)
+
+        # Find which range we want to show based on the data we have
+        right = max(max_data, self.graph_x_size)
+        left = right - self.graph_x_size
+
+        # Increase the range by 10% on each side to make it less cramped
+        left -= self.graph_x_size / 10
+        right += self.graph_x_size / 10
+
+        self.ax.set_xlim(left, right)
+
+        return max_data
+
     def update(self, output_update):
-        if 'new_complex_events' in output_update:
-            evaluation = output_update['evaluation']
-
-            # We can get the x_data from just one of the lines since they should all be the same
-            x_data = sorted(evaluation[list(self.lines.keys())[0]]['()'].keys())
-
-            # Find which range we want to show based on the data we have
-            max_data = x_data[-1]
-            right = max(max_data, self.graph_x_size)
-            left = right - self.graph_x_size
-
-            # Increase the range by 10% on each side to make it less cramped
-            left -= self.graph_x_size / 10
-            right += self.graph_x_size / 10
-
-            self.ax.set_xlim(left, right)
-
-            for event, line in self.lines.items():
-                y_data = [evaluation[event]['()'][k] for k in x_data]
-
-                line.set_xdata(x_data)
-                line.set_ydata(y_data)
-
-                if self.use_rectangles:
-                    for i in range(self.previous_x_data_length, len(x_data)):
-                        if y_data[i] > self.ce_threshold:
-                            self.mark_rectangle_until(event, x_data, i)
-
-            self.previous_x_data_length = len(x_data)
+        if 'new_parsed_evaluation' in output_update:
+            self.update_graph(output_update['parsed_evaluation'])
 
             self.fig.canvas.draw()
             self.fig.canvas.flush_events()
