@@ -1,14 +1,15 @@
 import time
 import click
 import numpy as np
+from problog import get_evaluatables
 
 from confs.configuration import *
 from input.eventGeneration.event import Event
-from input.eventGeneration.eventGeneration import event_generators
+from input.eventGeneration.eventGeneration import available_event_generators
 from input.feed.inputFeedHandling import input_feeds
 from input.inputHandler import InputHandler
 from output.outputHandler import OutputHandler
-from ProbCEP.model import generate_model, update_evaluation, get_framework_files
+from ProbCEP.model import generate_model, get_framework_files
 
 
 def at_rate(iterable, rate):
@@ -54,16 +55,16 @@ class LiveEvents(object):
                 *conf['events']['event_definition'],
                 *get_framework_files(conf['events'].get('use_framework', []))
             ],
-            conf['logic'].get('precompile')
+            conf['logic'].get('precompile'),
+            evaluatable_name=conf['logic'].get('evaluatable')
         )
 
         # Initialize values
         self.evaluation = {}
+        self.parsed_evaluation = {}
 
-        self.complex_events = []
-
-        self.window = []
-        self.all_events = []  # All events will contain all the simple and complex events in the window
+        self.relevant_frames = []  # Relevant frames will include all the frames that are in the window
+        self.relevant_events = []  # Relevant events will contain all the simple and complex events in the window
 
         self.last_complex_event = []
         self.current_complex_event = []
@@ -99,27 +100,31 @@ class LiveEvents(object):
         return False
 
     def generate_simple_events(self, i, feed_i):
+        res = []
+
         # Every group_frequency, get the relevant events
         if not (i + 1) % self.group_frequency:
             # Check that we have enough frames for the group (preventing errors on first iterations)
-            if len(self.window) >= self.group_size:
-                relevant_frames = self.window[-self.group_size:]
+            if len(self.relevant_frames) >= self.group_size:
+                frames_to_group = self.relevant_frames[-self.group_size:]
 
                 # Add the part to update the frame number for event generation
-                relevant_frames = self.convert_for_event_generation(relevant_frames, i - feed_i)
+                frames_to_group = self.convert_for_event_generation(frames_to_group, i - feed_i)
 
-                new_events = self.input_handler.event_generator.get_events(relevant_frames)
+                new_events = self.input_handler.event_generator.get_events(frames_to_group)
 
                 # And add the part to convert back into events with the correct id
                 new_events = self.convert_after_event_generation(new_events, i - feed_i)
 
                 for e in new_events:
-                    if not self.event_exists_in(e, self.all_events):
-                        self.all_events.append(e)
+                    if not self.event_exists_in(e, self.relevant_events):
+                        res.append(e)
+                        self.relevant_events.append(e)
+
+        return res
 
     def generate_complex_events(self, i, output_update):
         new_evaluation = {}
-        new_complex_events = []
 
         # Every cep_frequency frames, run the CEP part with the relevant events
         # The i - group_size >= -1 is for the first iteration, where we do not have all the relevant frames
@@ -127,33 +132,74 @@ class LiveEvents(object):
             # print("Executing problog at {} for {} to {}".format(i, i - max_window + 1, i))
 
             # Remove the events that happened before the current window
-            while self.all_events and self.all_events[0].timestamp < i - self.max_window:
+            while self.relevant_events and self.relevant_events[0].timestamp < i - self.max_window:
                 # While we have events and the first event is before the current window, remove the first event
-                self.all_events = self.all_events[1:]
+                self.relevant_events = self.relevant_events[1:]
 
+            new_explanation = []
             new_evaluation = self.model.get_probabilities_precompile(
                 existing_timestamps=np.arange(0, i + 1, self.group_frequency),
                 query_timestamps=[i - self.group_size + 1],
                 tracked_ce=self.tracked_ce,
-                input_events=self.all_events
+                input_events=self.relevant_events,
+                explanation=new_explanation
             )
 
             new_events = Event.from_evaluation(new_evaluation)
-            self.all_events += new_events
+            self.relevant_events += new_events
 
-            new_complex_events = [
-                e
-                for e in new_events
-                if e.probability > self.ce_threshold
-            ]
+            self.fill_output_update(output_update, new_evaluation, new_events, new_explanation)
 
-            self.update_current_complex_event(new_complex_events)
+        return new_evaluation
 
-            output_update['new_evaluation'] = new_evaluation
-            output_update['new_complex_events'] = new_complex_events
-            output_update['last_complex_event'] = self.last_complex_event
+    def update_evaluation(self, new_evaluation):
+        # for event, event_val in new_evaluation.items():
+        #     if event in evaluation:
+        #         for ids, ids_val in event_val.items():
+        #             if ids in evaluation[event]:
+        #                 for timestamp, prob in ids_val.items():
+        #                     evaluation[event][ids][timestamp] = prob
+        #             else:
+        #                 evaluation[event][ids] = ids_val
+        #     else:
+        #         evaluation[event] = event_val
 
-        return new_evaluation, new_complex_events
+        self.evaluation.update(new_evaluation)
+
+    def update_parsed_evaluation(self, new_parsed_evaluation):
+        for event, event_val in new_parsed_evaluation.items():
+            self.parsed_evaluation.setdefault(event, {})
+            for timestamp, prob in event_val.items():
+                self.parsed_evaluation[event][timestamp] = prob
+
+    def fill_output_update(self, output_update, new_evaluation, new_events, new_explanation):
+        new_parsed_evaluation = {}
+        for e, prob in new_evaluation.items():
+            new_parsed_evaluation.setdefault(str(e.args[0].args[0]), {})
+            new_parsed_evaluation[str(e.args[0].args[0])][int(e.args[1])] = prob
+
+        output_update['new_parsed_evaluation'] = new_parsed_evaluation
+
+        self.update_evaluation(new_evaluation)
+        self.update_parsed_evaluation(new_parsed_evaluation)
+
+        output_update['evaluation'] = self.evaluation
+        output_update['parsed_evaluation'] = self.parsed_evaluation
+
+        new_complex_events = [
+            e
+            for e in new_events
+            if e.probability > self.ce_threshold
+        ]
+
+        self.update_current_complex_event(new_complex_events)
+
+        output_update['new_events'] = new_events  # new_events contains all complex events generated this iteration,
+        # independently of whether they are above ce_threshold or not
+        output_update['new_evaluation'] = new_evaluation
+        output_update['new_explanation'] = new_explanation
+        output_update['new_complex_events'] = new_complex_events
+        output_update['last_complex_event'] = self.last_complex_event
 
     def update_current_complex_event(self, new_complex_events):
         if new_complex_events:
@@ -164,23 +210,30 @@ class LiveEvents(object):
 
     def start_detecting(self):
         for i, (feed_i, frame) in at_rate(enumerate(self.input_handler.input_feed), self.fps):
+            # if i > 5:
+            #     break
+
             output_update = {
                 'iteration': i,
                 'feed_iteration': feed_i,
                 'frame': frame  # Frame is the non-symbolic piece of information from the input stream
             }
 
-            # Keep only the number of frames we need
-            self.window.append((i, frame))
-            self.window = self.window[-self.group_size:]
+            self.relevant_frames.append((i, frame))
+            # Remove all frames that happened before the current window from the relevant frames
+            self.relevant_frames = list(
+                filter(
+                    lambda x: x[0] >= i - self.max_window,
+                    self.relevant_frames
+                )
+            )
+            output_update['relevant_frames'] = self.relevant_frames
 
-            self.generate_simple_events(i, feed_i)
+            output_update['new_simple_events'] = self.generate_simple_events(i, feed_i)
 
-            new_evaluation, new_complex_events = self.generate_complex_events(i, output_update)
+            self.generate_complex_events(i, output_update)
 
-            self.evaluation = update_evaluation(self.evaluation, new_evaluation)
-            output_update['evaluation'] = self.evaluation
-            self.complex_events += new_complex_events
+            output_update['relevant_events'] = self.relevant_events
 
             self.output_handler.update(output_update)
 
@@ -222,7 +275,7 @@ class LiveEvents(object):
 )
 @click.option(
     '--add_event_generator', multiple=True,
-    type=click.Choice(event_generators.keys()),
+    type=click.Choice(available_event_generators.keys()),
     help='Event generators process the input feed each iteration and extract the events from it'
 )
 @click.option(
@@ -313,6 +366,33 @@ class LiveEvents(object):
 )
 @click.option(
     '--sue_address', type=str, help='Specify if you want to send a message to SUE'
+)
+@click.option(
+    '--cogni_sketch_url', type=str,
+    help='Specify the URL for the Cogni-Sketch connection. A Cogni-Sketch output is only created if this option is '
+         'activated'
+)
+@click.option('--cogni_sketch_project', type=str, help='Specify the project for the Cogni-Sketch connection')
+@click.option(
+    '--cogni_sketch_project_owner', type=str, help='Specify the project owner for the Cogni-Sketch connection'
+)
+@click.option('--cogni_sketch_user', type=str, help='Specify the user for the Cogni-Sketch connection')
+@click.option(
+    '--cogni_sketch_password', type=str,
+    help='Specify the password for the Cogni-Sketch connection (optional, will be asked when needed otherwise)'
+)
+@click.option(
+    '--cogni_sketch_use_simplified_explanations', is_flag=True,
+    help='Use to show simplified explanations in Cogni-Sketch'
+)
+@click.option(
+    '--evaluatable', type=click.Choice(get_evaluatables()), help='Evaluatable to be used for ProbLog inference'
+)
+@click.option(
+    '--explanation', is_flag=True, help='Use to print the explanations'
+)
+@click.option(
+    '--simple_events_text', is_flag=True, help='...'
 )
 def main(conf, *args, **kwargs):
     if conf:

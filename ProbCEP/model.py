@@ -12,9 +12,10 @@ import sys
 
 # Files that define how EC works
 from ProbCEP.precompilation import EventPreCompilation, EventQuery
-from ProbCEP.utils import unsorted_groupby, term_to_list, get_values
+from ProbCEP.utils import unsorted_groupby, term_to_list, get_values, get_event_values
 from input.eventGeneration.event import Event
 from preCompilation.PreCompilation import PreCompilationArguments
+import ProbCEP.mykbest
 
 
 FRAMEWORK_LIBRARY = {
@@ -33,7 +34,7 @@ def get_framework_files(frameworks):
 
 
 class Model(object):
-    def __init__(self, event_definition_files=(), precompile_arguments=None):
+    def __init__(self, event_definition_files=(), precompile_arguments=None, evaluatable_name=None):
         # The base model will be formed from the base ProbLog files that define EC
         # and the files given by the user that should define the rules for the
         # complex event they are trying to detect
@@ -44,8 +45,12 @@ class Model(object):
 
         self.model = '\n\n'.join(models)
 
+        self.evaluatable = get_evaluatable(name=evaluatable_name)
+
         if precompile_arguments:
-            self.precompilation = EventPreCompilation(precompile_arguments, self.model)
+            self.precompilation = EventPreCompilation(
+                precomp_args=precompile_arguments, model=self.model, evaluatable_name=evaluatable_name
+            )
         else:
             self.precompilation = None
 
@@ -63,20 +68,7 @@ class Model(object):
             for event, v1 in unsorted_groupby(map(get_values, evaluation.items()), lambda x: x[0])
         }
 
-    def get_timestamps(self):
-        model = PrologString(self.model + '\n\nquery(allTimeStamps(TPs)).')
-
-        knowledge = get_evaluatable().create_from(model)
-
-        timestamps = [
-            term_to_list(term.args[0])
-            for term in knowledge.evaluate().keys()
-            if term.functor == 'allTimeStamps'
-        ]
-
-        return sorted([item for sublist in timestamps for item in sublist])
-
-    def get_values_for(self, existing_timestamps, query_timestamps, tracked_ce, input_events=()):
+    def get_values_for(self, existing_timestamps, query_timestamps, tracked_ce, input_events=(), explanation=None):
         # As the model we use self.model (basic EC definition + definition of rules by the user) and we add the list
         # of the input events
         string_model = self.model + '\n' + '\n'.join(map(lambda x: x.to_problog(), input_events))
@@ -93,9 +85,15 @@ class Model(object):
 
                 model = PrologString(string_model + '\n' + updated_knowledge + '\n' + query)
 
-                knowledge = get_evaluatable().create_from(model, semiring=SemiringSymbolic())
+                knowledge = self.evaluatable.create_from(model, label_all=True)
 
-                evaluation = knowledge.evaluate()
+                evaluation = knowledge.evaluate(explain=explanation)
+
+                # If the evaluation value is a tuple, use the average. Otherwise, (if it's a float) keep that
+                evaluation = {
+                    k: (v[0] + v[1]) / 2 if isinstance(v, tuple) and len(v) == 2 else v
+                    for k, v in evaluation.items()
+                }
 
                 res.update(evaluation)
 
@@ -105,31 +103,37 @@ class Model(object):
 
         return res
 
-    def get_probabilities(self, existing_timestamps, query_timestamps, tracked_ce, input_events=()):
+    def get_probabilities(self, existing_timestamps, query_timestamps, tracked_ce, input_events=(), explanation=None):
         evaluation = self.get_values_for(
-            existing_timestamps, query_timestamps, tracked_ce, input_events=input_events
+            existing_timestamps, query_timestamps, tracked_ce, input_events=input_events, explanation=explanation
         )
 
-        return self._evaluation_to_prob(evaluation)
+        # evaluation = self._evaluation_to_prob(evaluation)
+        return evaluation
 
-    def get_probabilities_precompile(self, existing_timestamps, query_timestamps, tracked_ce, input_events=()):
+    def get_probabilities_precompile(self, existing_timestamps, query_timestamps, tracked_ce, input_events=(),
+                                     explanation=None):
         if self.precompilation:
             evaluation, missing_events = self.precompilation.get_values_for(
-                query_timestamps, tracked_ce, input_events
+                query_timestamps, tracked_ce, input_events, explanation
             )
 
-            res = self._evaluation_to_prob(evaluation)
+            # evaluation = self._evaluation_to_prob(evaluation)
 
             if missing_events:
-                input_events += Event.from_evaluation(res)
+                input_events += Event.from_evaluation(evaluation)
 
-                res.update(
-                    self.get_probabilities(existing_timestamps, query_timestamps, missing_events, input_events)
+                evaluation.update(
+                    self.get_probabilities(
+                        existing_timestamps, query_timestamps, missing_events, input_events, explanation
+                    )
                 )
 
-            return res
+            return evaluation
         else:
-            return self.get_probabilities(existing_timestamps, query_timestamps, tracked_ce, input_events)
+            return self.get_probabilities(
+                existing_timestamps, query_timestamps, tracked_ce, input_events, explanation
+            )
 
     @staticmethod
     def read_model(m):
@@ -141,7 +145,7 @@ class Model(object):
             return '\n'
 
 
-def generate_model(event_definitions, precompile):
+def generate_model(event_definitions, precompile, evaluatable_name=None):
     if precompile:
         with open(precompile, 'r') as f:
             json_precompile = json.load(f)
@@ -151,21 +155,6 @@ def generate_model(event_definitions, precompile):
             queries=[EventQuery(**q) for q in json_precompile['queries']]
         )
 
-        return Model(event_definitions, precomp_args)
+        return Model(event_definitions, precomp_args, evaluatable_name=evaluatable_name)
     else:
-        return Model(event_definitions)
-
-
-def update_evaluation(evaluation, new_evaluation):
-    for event, event_val in new_evaluation.items():
-        if event in evaluation:
-            for ids, ids_val in event_val.items():
-                if ids in evaluation[event]:
-                    for timestamp, prob in ids_val.items():
-                        evaluation[event][ids][timestamp] = prob
-                else:
-                    evaluation[event][ids] = ids_val
-        else:
-            evaluation[event] = event_val
-
-    return evaluation
+        return Model(event_definitions, evaluatable_name=evaluatable_name)

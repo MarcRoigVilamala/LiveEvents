@@ -9,8 +9,9 @@ REQUIRED_FIELDS = [
     'events',
     'logic',
     'misc',
-    'input/input_feed_type',
-    'input/add_event_generator',
+    'input/input_feed',
+    'input/input_feed/type',
+    'input/event_generators',
     'events/tracked_ce',
     'events/event_definition',
     'events/ce_threshold',
@@ -60,14 +61,23 @@ def create_configuration(save_conf_as, tracked_ce, event_definition, input_feed_
                          graph_x_size, interesting_objects, fps, precompile, text, clean_text, timings, use_graph,
                          play_audio, play_video, video_name, video_x_position, video_y_position, loop_at, button,
                          post_message, zmq_address, zmq_port, ce_threshold, video_scale, mark_objects, save_graph_to,
-                         sue_address):
+                         sue_address, cogni_sketch_url, cogni_sketch_project, cogni_sketch_project_owner,
+                         cogni_sketch_user, cogni_sketch_password, cogni_sketch_use_simplified_explanations,
+                         evaluatable, explanation, simple_events_text):
     conf = {
         'input': {
-            'input_feed_type': input_feed_type,
-            'add_event_generator': add_event_generator,
-            'interesting_objects': interesting_objects,
-            'audio_file': audio_file,
-            'video_name': video_name,
+            'input_feed': {
+                'type': input_feed_type,
+                'audio_file': audio_file,
+                'video_name': video_name,
+            },
+            'event_generators': [
+                {
+                    'type': event_generator,
+                    'interesting_objects': interesting_objects,
+                }
+                for event_generator in add_event_generator
+            ],
             'loop_at': loop_at,
             'button': button,
             'post_message': post_message
@@ -75,6 +85,8 @@ def create_configuration(save_conf_as, tracked_ce, event_definition, input_feed_
         'output': {
             'text': text,
             'clean_text': clean_text,
+            'explanation': explanation,
+            'simple_events_text': simple_events_text,
             'timings': timings,
             'graph': {
                 'use_graph': use_graph,
@@ -93,7 +105,15 @@ def create_configuration(save_conf_as, tracked_ce, event_definition, input_feed_
                 'zmq_address': zmq_address,
                 'zmq_port': zmq_port
             } if zmq_address else {},
-            'sue_address': sue_address
+            'sue_address': sue_address,
+            'cogni_sketch': {
+                "url": cogni_sketch_url,
+                "project": cogni_sketch_project,
+                "project_owner": cogni_sketch_project_owner,
+                "user": cogni_sketch_user,
+                "password": cogni_sketch_password,
+                "use_simplified_explanations": cogni_sketch_use_simplified_explanations
+            } if cogni_sketch_url else {}
         },
         'events': {
             'tracked_ce': tracked_ce,
@@ -106,7 +126,8 @@ def create_configuration(save_conf_as, tracked_ce, event_definition, input_feed_
             'cep_frequency': cep_frequency,
             'group_size': group_size,
             'group_frequency': group_frequency,
-            'precompile': precompile
+            'precompile': precompile,
+            'evaluatable': evaluatable
         },
         'misc': {
             'fps': fps,
@@ -123,7 +144,7 @@ def update_configuration_values(conf, *args, **kwargs):
     update_with = create_configuration(*args, **kwargs)
 
     for general_key, general_value in conf.items():
-        for update_key, update_value in update_with[general_key].items():
+        for update_key, update_value in update_with.get(general_key, {}).items():
             conf[general_key][update_key] = update_value
 
     conf = remove_empty_values(conf)
@@ -132,14 +153,15 @@ def update_configuration_values(conf, *args, **kwargs):
 
 
 def remove_empty_values(conf):
-    new_conf = {
-        general_key: {
-            subkey: value
-            for subkey, value in general_value.items()
-            if value
-        }
-        for general_key, general_value in conf.items()
-    }
+    # Recursively removes all values evaluated as false (including None and empty dictionaries) from the conf
+
+    new_conf = {}
+    for k, v in conf.items():
+        if isinstance(v, dict):
+            v = remove_empty_values(v)
+
+        if v:
+            new_conf[k] = v
 
     return new_conf
 

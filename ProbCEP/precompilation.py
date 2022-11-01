@@ -5,15 +5,15 @@ from input.eventGeneration.event import Event
 
 
 class EventPreCompilation(PreCompilation):
-    def __init__(self, precomp_args, model):
+    def __init__(self, precomp_args, model, *args, **kwargs):
         all_timestamps = {e.timestamp for e in precomp_args.input_clauses}
         all_timestamps = all_timestamps.union({q.timestamp for q in precomp_args.queries})
 
         model += '\nallTimeStamps([{}]).'.format(', '.join(map(str, sorted(list(all_timestamps)))))
 
-        super(EventPreCompilation, self).__init__(precomp_args, model)
+        super(EventPreCompilation, self).__init__(precomp_args, model, *args, **kwargs)
 
-    def get_values_for(self, query_timestamps, tracked_ce, input_events=()):
+    def get_values_for(self, query_timestamps, tracked_ce, input_events=(), explanation=None):
         input_events = list(input_events)
 
         missing_events = set(tracked_ce) - set(self.precompilations.keys())
@@ -31,7 +31,7 @@ class EventPreCompilation(PreCompilation):
             for event in query_events
         ]
 
-        res = self.perform_queries(queries, input_events, use_feedback=True)
+        res = self.perform_queries(queries, input_events, use_feedback=True, explanation=explanation)
 
         return res, missing_events
 
