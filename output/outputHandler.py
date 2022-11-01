@@ -1,3 +1,5 @@
+from output.explanationTextOutput import ExplanationTextOutput
+from output.newSimpleEventsText import NewSimpleEventsText
 from output.text import Text
 from output.cleanText import CleanText
 from output.timings import Timings
@@ -15,8 +17,14 @@ class OutputHandler(object):
         if conf['output'].get('text'):
             self.outputs.append(Text())
 
+        if conf['output'].get('explanation'):
+            self.outputs.append(ExplanationTextOutput(conf))
+
         if conf['output'].get('clean_text'):
             self.outputs.append(CleanText())
+
+        if conf['output'].get('simple_events_text'):
+            self.outputs.append(NewSimpleEventsText())
 
         graph_conf = conf['output'].get('graph')
         if graph_conf and (graph_conf.get('use_graph') or graph_conf.get('save_graph_to')):
@@ -54,7 +62,14 @@ class OutputHandler(object):
 
         if conf['output'].get('play_audio'):
             from output.audio import Audio
-            self.outputs.append(Audio(conf['input']['audio_file']))
+            from input.feed.audioFeed import AudioFeed
+            assert isinstance(input_handler.input_feed, AudioFeed), "The input needs to be AudioFeed to play audio"
+
+            self.outputs.append(Audio(input_handler.input_feed.audio_file))
+
+        if conf['output'].get('cogni_sketch'):
+            from output.cogniSketchOutput import CogniSketchOutput
+            self.outputs.append(CogniSketchOutput(conf, tracked_ce, input_handler))
 
     def finish_initialization(self):
         for o in self.outputs:
