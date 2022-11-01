@@ -19,7 +19,8 @@ from preCompilation.PreCompilation import PreCompilationArguments
 
 FRAMEWORK_LIBRARY = {
     'sequence': 'ProbCEP/ProbLogFiles/sequence.pl',
-    'eventCalculus': 'ProbCEP/ProbLogFiles/prob_ec_cached.pl'
+    'eventCalculus': 'ProbCEP/ProbLogFiles/prob_ec_cached.pl',
+    'instantEventCalculus': 'ProbCEP/ProbLogFiles/instant_prob_ec_cached.pl'
 }
 
 
