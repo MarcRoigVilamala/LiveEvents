@@ -1,10 +1,14 @@
 {
     "input": {
-        "input_feed_type": "AudioFeed",
-        "add_event_generator": [
-            "FromAudioNN"
-        ],
-        "audio_file": "/home/marc/thesis/audios/demo_audio_gunshots.wav"
+        "input_feed": {
+            "type": "AudioFeed",
+            "audio_file": "/home/marc/thesis/audios/demo_audio_gunshots.wav"
+        },
+        "event_generators": [
+            {
+                "type": "FromAudioNN"
+            }
+        ]
     },
     "output": {
         "text": true
