@@ -263,19 +263,24 @@ class CogniSketchOutput(LiveEventsOutput):
         def create_graph_json():
             project = self.cogni_sketch_conf['project']
             image_filename = 'ce_graph_at_{}.png'.format(latest_timestamp)
-            graph_filepath = '{base_path}/{project_owner}/{project}/images/{image_filename}'.format(
+            directory_filepath = '{base_path}/{project_owner}/{project}/images'.format(
                 base_path=self.cogni_sketch_conf['save_images_to'],
                 project_owner=self.cogni_sketch_conf['project_owner'],
-                project=project,
+                project=project
+            )
+            graph_filepath = '{directory}/{image_filename}'.format(
+                directory=directory_filepath,
                 image_filename=image_filename
             )
 
             if os.path.exists(graph_filepath):
                 os.remove(graph_filepath)
+            elif not os.path.exists(directory_filepath):
+                os.makedirs(directory_filepath)
 
             self.graph.fig.savefig(graph_filepath)
 
-            graph_cs_path = f'./images/{project}/{image_filename}'
+            graph_cs_path = f'./image/{project}/{image_filename}'
 
             return {
                 **self.get_default_obj_json("graph", latest_timestamp, hide),
