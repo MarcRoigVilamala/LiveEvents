@@ -147,8 +147,6 @@ def update_configuration_values(conf, *args, **kwargs):
         for update_key, update_value in update_with.get(general_key, {}).items():
             conf[general_key][update_key] = update_value
 
-    conf = remove_empty_values(conf)
-
     return conf
 
 

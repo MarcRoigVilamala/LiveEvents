@@ -408,7 +408,7 @@ def main(conf, *args, **kwargs):
 
     save_conf_as = conf['misc'].get('save_conf_as')
     if save_conf_as:
-        save_configuration(remove_empty_values(conf), save_conf_as)
+        save_configuration(conf, save_conf_as)
 
     live_events = LiveEvents(conf)
 
