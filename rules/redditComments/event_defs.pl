@@ -17,10 +17,10 @@ wraps(banOffence, sexual_orientation).
 % Number of timestamps to look at (should be min the length of the sequence)
 givenWindow(2).
 
-initiatedAt(ceBan = true, T) :-
+initiatedAt(ceQuarantine = true, T) :-
     givenWindow(Window),
     sequence([banOffence, banOffence], Window, T).
 
-initiatedAt(ceBan = false, T) :-
+initiatedAt(ceQuarantine = false, T) :-
     givenWindow(Window),
     sequence([exclude(banOffence)], Window, T).

@@ -40,7 +40,7 @@ def probability_to_words(prob, using_table=None):
 
 TRANSLATE = {
     "ishate": "Hate Speech",
-    "ceBan=true": "Quarantine"
+    "ceQuarantine=true": "Quarantine"
 }
 
 
@@ -403,7 +403,7 @@ class CogniSketchOutput(LiveEventsOutput):
                         "wep": probability_to_words(event.probability),
                     },
                     "label": "{}: {:.1f}%".format(
-                        TRANSLATE.get(event.identifier, event.identifier),
+                        TRANSLATE.get(event.identifier, event.identifier.split("=")[0]),
                         event.probability * 100
                     )
                 }
