@@ -80,7 +80,9 @@ class CogniSketchOutput(LiveEventsOutput):
             ce_threshold=self.cogni_sketch_conf.get('graph_threshold', 0.9),
             save_graph_to=None,
             use_rectangles=False,
-            mark_threshold=True
+            mark_threshold=self.cogni_sketch_conf.get('mark_threshold', True),
+            legend_fontsize=35,
+            supress_drawing=True
         )
 
         self.cs_objects = {}
@@ -124,6 +126,7 @@ class CogniSketchOutput(LiveEventsOutput):
                 "graph": 600,
             }
         )
+        self.x_padding_by_object_type = self.cogni_sketch_conf.get("x_padding_by_object_type", {})
         self.max_instances_per_timestamp = self.cogni_sketch_conf.get(
             "max_instances_per_timestamp",
             {
@@ -137,9 +140,19 @@ class CogniSketchOutput(LiveEventsOutput):
             }
         )
 
-        self.max_explanations = self.max_instances_per_timestamp['explanation']
+        self.max_explanations_per_ce = self.max_instances_per_timestamp['explanation'] // len(tracked_ce)
         self.min_explanation_threshold = self.cogni_sketch_conf.get("min_explanation_threshold", 0.0)
         self.hide_threshold = self.cogni_sketch_conf.get("hide_threshold", 0.33)
+
+        self.probability_to_words_table = self.cogni_sketch_conf.get(
+            "probability_to_words_table", SIMPLE_PROBABILITY_TO_WORDS_TABLE
+        )
+
+        if "title" in self.cogni_sketch_conf:
+            self.prepare_title(self.cogni_sketch_conf["title"])
+
+        if "starting_image" in self.cogni_sketch_conf:
+            self.prepare_image(self.cogni_sketch_conf["starting_image"])
 
     @staticmethod
     def get_at_stage(from_dict: dict, stage: CSObjStage):
@@ -227,14 +240,17 @@ class CogniSketchOutput(LiveEventsOutput):
         x = self.x_by_object_type[object_type]
         y = self.y_by_object_type[object_type]
 
-        change = self.x_change_by_object_type.get(object_type, 100)
+        base = self.base_x_by_object_type.get(object_type, 0)
 
-        if object_type in self.max_instances_per_timestamp:
-            base = self.base_x_by_object_type.get(object_type, 0)
-            x = max(
-                x,
-                base + change * timestamp * self.max_instances_per_timestamp[object_type]
-            )
+        change = self.x_change_by_object_type.get(object_type, 100)
+        change_by_instances = change * timestamp * self.max_instances_per_timestamp.get(object_type, 0)
+
+        padding = self.x_padding_by_object_type.get(object_type, 0)
+
+        x = max(
+            x,
+            base + change_by_instances + padding * timestamp
+        )
 
         res = {"x": x, "y": y}
 
@@ -254,6 +270,52 @@ class CogniSketchOutput(LiveEventsOutput):
             "linkRefs": [],
             "data": {}
         }
+
+    def prepare_title(self, title, timestamp=0, force_pending=True, hide=False):
+        title_id = "{}title_{}".format(self.uid_start(), hash(title))
+
+        def create_title_json():
+            return {
+                **self.get_default_obj_json("title", timestamp, hide),
+                "uid": title_id,
+                "type": "header",
+                "data": {
+                    "properties": {},
+                    "label": title
+                }
+            }
+
+        self.create_with(
+            uid=title_id,
+            create_json_method=create_title_json,
+            force_pending=force_pending
+        )
+
+        return title_id
+
+    def prepare_image(self, image_cs_path, timestamp=0, force_pending=True, hide=False):
+        image_id = "{}image_{}".format(self.uid_start(), hash(image_cs_path))
+
+        def create_image_json():
+            return {
+                **self.get_default_obj_json("image", timestamp, hide),
+                "uid": image_id,
+                "type": "image",
+                "mode": "full",
+                "data": {
+                    "properties": {
+                        "filename": {"type": "text", "value": image_cs_path}
+                    }
+                }
+            }
+
+        self.create_with(
+            uid=image_id,
+            create_json_method=create_image_json,
+            force_pending=force_pending
+        )
+
+        return image_id
 
     def prepare_graph(self, output_update, force_pending=True, hide=False):
         latest_timestamp = self.graph.update_graph(output_update["parsed_evaluation"])
@@ -339,7 +401,9 @@ class CogniSketchOutput(LiveEventsOutput):
                     "properties": {
                         "text": comment['body'].replace('\n', '<br>'),
                         "score": str(comment['score']),
-                        "created_at": datetime.fromtimestamp(comment['created_utc']).strftime("%c"),
+                        # "created_at": datetime.fromtimestamp(comment['created_utc']).strftime("%c"),
+                        "created_at": datetime.fromtimestamp(comment['created_utc']).strftime("%d/%m/%Y %H:%M"),
+                        # "created_at": datetime.fromtimestamp(comment['created_utc']).strftime("%d/%m/%Y"),
                         "subreddit": comment['subreddit'],
                         "total_awards_received": comment['total_awards_received']
                     },
@@ -363,7 +427,7 @@ class CogniSketchOutput(LiveEventsOutput):
                 **self.get_default_obj_json("event", event.timestamp, hide),
                 "uid": event_id,
                 "type": "{}SimpleEvent".format(
-                    probability_to_words(event.probability, SIMPLE_PROBABILITY_TO_WORDS_TABLE)
+                    probability_to_words(event.probability, self.probability_to_words_table)
                 ),
                 "data": {
                     "properties": {
@@ -395,7 +459,7 @@ class CogniSketchOutput(LiveEventsOutput):
                 **self.get_default_obj_json("complex_event", event.timestamp, hide),
                 "uid": event_id,
                 "type": "{}ComplexEvent".format(
-                    probability_to_words(event.probability, SIMPLE_PROBABILITY_TO_WORDS_TABLE)
+                    probability_to_words(event.probability, self.probability_to_words_table)
                 ),
                 "data": {
                     "properties": {
@@ -427,7 +491,7 @@ class CogniSketchOutput(LiveEventsOutput):
                 **self.get_default_obj_json("explanation", timestamp, hide),
                 "uid": explanation_id,
                 "type": "{}Explanation".format(
-                    probability_to_words(explanation[0], SIMPLE_PROBABILITY_TO_WORDS_TABLE)
+                    probability_to_words(explanation[0], self.probability_to_words_table)
                 ),
                 "data": {
                     "properties": {
@@ -525,6 +589,18 @@ class CogniSketchOutput(LiveEventsOutput):
         else:
             uid = "link_{}_{}".format(source_id, target_id)
 
+            # Apply bend depending on the angle of the link
+            source_pos = self.cs_objects[source_id]['json']['pos']
+            target_pos = self.cs_objects[target_id]['json']['pos']
+
+            x_diff = target_pos['x'] - source_pos['x']
+            y_diff = target_pos['y'] - source_pos['y']
+
+            if y_diff == 0.0:
+                bender = 0.0
+            else:
+                bender = -x_diff * 0.2 / y_diff
+
             self.cs_links[uid] = {
                 "json": {
                     "uid": uid,
@@ -533,8 +609,8 @@ class CogniSketchOutput(LiveEventsOutput):
                         "properties": {},
                         "label": label
                     },
-                    "anchorPos": 0.5,
-                    "bender": 0,
+                    "anchorPos": 0.4,
+                    "bender": bender,
                     "bidirectional": False,
                     "sourceRef": source_id,
                     "targetRef": target_id
@@ -556,7 +632,9 @@ class CogniSketchOutput(LiveEventsOutput):
 
             self.add_explanations(new_complex_event_ids, output_update, force_pending=force_pending)
 
-            # self.send_pending()
+            if self.cogni_sketch_conf.get("send_on_update", False):
+                if self.send_pending():  # Send pending. If any updates were sent, wait for user input
+                    input("Press enter to continue")
 
     def add_author_comment_and_events(self, output_update, force_pending):
         for timestamp, comment in output_update['relevant_frames']:
@@ -621,7 +699,26 @@ class CogniSketchOutput(LiveEventsOutput):
                             max_clauses=8
                         )
 
-                    for current_explan in explanations[:self.max_explanations - 1]:
+                    shown_explanations = explanations[:self.max_explanations_per_ce - 1]
+                    other_explanations = explanations[self.max_explanations_per_ce - 1:]
+
+                    # Get the rest of the explanations that account for more than self.min_explanation_threshold
+                    # This is done to ignore explanations that contribute very minimally
+                    other_explanations = list(
+                        filter(
+                            lambda x: x[0] > self.min_explanation_threshold,
+                            other_explanations
+                        )
+                    )
+
+                    if len(other_explanations) == 1:
+                        # If there is only 1 additional explanation, show it directly
+                        shown_explanations += other_explanations
+                        other_explanations = []
+
+                    n_explanations_added = 0
+
+                    for current_explan in shown_explanations:
                         # If the probability of the current explanation is lower than self.min_explanation_threshold,
                         # stop adding explanations as they don't contribute enough to be relevant
                         if current_explan[0] < self.min_explanation_threshold:
@@ -631,6 +728,7 @@ class CogniSketchOutput(LiveEventsOutput):
                             complex_event, timestamp, current_explan, force_pending=force_pending,
                             hide=current_explan[0] < self.hide_threshold
                         )
+                        n_explanations_added += 1
 
                         self.add_link(explan_id, ce_id, "explains", force_pending=force_pending)
 
@@ -639,29 +737,22 @@ class CogniSketchOutput(LiveEventsOutput):
 
                             self.add_link(clause_id, explan_id, "is part of", force_pending=force_pending)
 
-                    # Get the rest of the explanations that account for more than self.min_explanation_threshold
-                    # This is done to ignore explanations that contribute very minimally
-                    other_explan = list(
-                        filter(
-                            lambda x: x[0] > self.min_explanation_threshold,
-                            explanations[self.max_explanations - 1:]
-                        )
-                    )
-                    if other_explan:
+                    if other_explanations:
                         # Get the set of clauses for other explanations. Each element is an is_negated, clause pair
                         other_explan_clauses = set(
                             sum(
                                 map(
                                     lambda x: extract_clauses_from(x[1]),
-                                    other_explan
+                                    other_explanations
                                 ),
                                 []
                             )
                         )
 
                         explan_id = self.prepare_other_explanation(
-                            complex_event, timestamp, other_explan, force_pending=force_pending, hide=True
+                            complex_event, timestamp, other_explanations, force_pending=force_pending, hide=True
                         )
+                        n_explanations_added += 1
 
                         self.add_link(explan_id, ce_id, force_pending=force_pending)
 
@@ -669,6 +760,15 @@ class CogniSketchOutput(LiveEventsOutput):
                             clause_id = self.get_explanation_clause(clause)
 
                             self.add_link(clause_id, explan_id, "is part of", force_pending=force_pending)
+
+                    # If we have added fewer explanations than max_explanations_per_ce, call get_pos for the difference
+                    # of times. This ensures that the explanations for each complex event always appear in the same
+                    # position relative to their complex events (ideally centered below it).
+                    # TODO: Implement a fix that allows for control of this without having to call get_pos directly. It
+                    #  should work the same as having fewer simple events for one timestamp. Current code relies on
+                    #  timestamps so it doesn't work when there are explanations for multiple complex events.
+                    for i in range(n_explanations_added, self.max_explanations_per_ce):
+                        self.get_pos("explanation", timestamp)
 
     def update_pending_links(self):
         # For all the standby links, if both the source and target are going to be in the canvas, set them to pending
@@ -699,6 +799,10 @@ class CogniSketchOutput(LiveEventsOutput):
 
             for cs_uid in self.pending_objects_uids:
                 self.set_uid_stage(cs_uid, CSObjStage.POSTED)
+
+            return True
+
+        return False
 
     def terminate_output(self, *args, **kwargs):
         self.send_pending()
