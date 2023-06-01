@@ -99,7 +99,7 @@ def create_audio_generator(conf, event_gen_conf):
     )
 
 
-def create_live_audio_generator(conf, event_gen_conf):
+def create_silence_audio_generator(conf, event_gen_conf):
     import torch
     from input.eventGeneration.fromAudioNN import SoundVGGish, FromAudioNN
 
@@ -147,7 +147,7 @@ available_event_generators = {
     'FileOverlapping': create_file_overlapping_generator,
     # 'ObjectDetector': create_object_detector_generator,
     'FromAudioNN': create_audio_generator,
-    'FromLiveAudioNN': create_live_audio_generator,
+    'FromSilenceAudioNN': create_silence_audio_generator,
     'FromAudioNeuroplytorch': create_audio_neuroplytorch_generator,
     'FromNLP': create_nlp_generator,
 }
