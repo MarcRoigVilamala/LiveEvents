@@ -7,7 +7,7 @@ from output.liveEventsOutupt import LiveEventsOutput
 
 class Graph(LiveEventsOutput):
     def __init__(self, graph_x_size, tracked_ce, ce_threshold, save_graph_to=None, use_rectangles=True,
-                 mark_threshold=False):
+                 mark_threshold=False, legend_fontsize='medium', supress_drawing=False):
         self.graph_x_size = graph_x_size
         self.ce_threshold = ce_threshold
         self.use_rectangles = use_rectangles
@@ -16,17 +16,24 @@ class Graph(LiveEventsOutput):
         y = [0, 1]
 
         # You probably won't need this if you're embedding things in a tkinter plot...
-        plt.ion()
+        if supress_drawing:
+            plt.ioff()
+        else:
+            plt.ion()
 
         self.fig = plt.figure(figsize=(16, 9))
         self.ax = self.fig.add_subplot(1, 1, 1)
+
+        # self.fig.set_size_inches(16, 4.5, True)
 
         # Keeps track of which line and color is used for each complex event, to allow updating the lines and creating
         # rectangles of the same color (if the option is active)
         self.lines = {}
         self.colors = {}
         for event in tracked_ce:
-            self.lines[event], = self.ax.plot(x, y, label=event)  # Returns a tuple of line objects, thus the comma
+            self.lines[event], = self.ax.plot(
+                x, y, label=event, linewidth=3
+            )  # Returns a tuple of line objects, thus the comma
 
             self.colors[event] = self.lines[event].get_color()
 
@@ -37,13 +44,13 @@ class Graph(LiveEventsOutput):
 
         self.last_rectangle = {}
 
-        plt.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=3)
+        plt.legend(loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=3, fontsize=legend_fontsize)
         plt.xlabel('Time (s)')
         plt.ylabel('Confidence')
 
         self.save_graph_to = save_graph_to
         if save_graph_to:
-            self.graph_writer = FFMpegFileWriter(fps=1)
+            self.graph_writer = FFMpegFileWriter(fps=1 / 0.96)  # VGGish splits audio into sections of 0.96s
             # self.graph_writer.setup(self.fig, save_graph_to, 100)
             self.graph_writer.setup(self.fig, save_graph_to)
         else:
