@@ -524,6 +524,31 @@
             "timestamp": 4,
             "event": "ceWorryingSiren=true",
             "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 0,
+            "event": "ceSafeEnv=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 1,
+            "event": "ceSafeEnv=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 2,
+            "event": "ceSafeEnv=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 3,
+            "event": "ceSafeEnv=true",
+            "event_type": "holdsAt_"
+        },
+        {
+            "timestamp": 4,
+            "event": "ceSafeEnv=true",
+            "event_type": "holdsAt_"
         }
     ],
     "queries": [
@@ -569,6 +594,10 @@
         },
         {
             "identifier": "ceWorryingSiren",
+            "timestamp": 5
+        },
+        {
+            "identifier": "ceSafeEnv",
             "timestamp": 5
         }
     ]

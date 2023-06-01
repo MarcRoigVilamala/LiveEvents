@@ -93,6 +93,14 @@ initiatedAt(ceStreetMusic = false, T) :-
     givenWindow(Window),
     sequence([exclude(streetMusic)], Window, T).
 
+initiatedAt(ceSafeEnv = true, T) :-
+    givenWindow(Window),
+    sequence([safeEnv, safeEnv], Window, T).
+
+initiatedAt(ceSafeEnv = false, T) :-
+    givenWindow(Window),
+    sequence([exclude(safeEnv)], Window, T).
+
 %initiatedAt(ceWorryingSiren = true, T) :-
 %    givenWindow(Window),
 %    sequenceEndingAt([exclude(safeEnv), siren, exclude(safeEnv), siren, exclude(safeEnv), siren, safeEnv], Window, T).
