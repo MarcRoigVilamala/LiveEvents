@@ -1,4 +1,4 @@
-from sympy import Not, And, Symbol
+from sympy import Not, And, Or, Symbol
 from sympy.logic.boolalg import to_dnf
 from sympy.parsing.sympy_parser import parse_expr
 
@@ -58,6 +58,41 @@ def simplify_explanations(explanations, probabilities_by_clause, max_clauses=Non
     def get_identifier_clause(identifier):
         return id_to_clause[identifier]
 
+    def retranslate_explanation(expl):
+        # Translates the explanation back from the sympy syntax into the ProbLog syntax.
+        # Returns total probability and clauses, joined by a ","
+
+        probability = 1.0
+
+        retranslated_expl = []
+        if isinstance(expl, (Symbol, Not)):
+            to_iterate = [expl]  # If there is only one clause (instead of an And)
+        elif isinstance(expl, And):
+            to_iterate = expl.args
+        else:
+            raise ValueError("Unexpected type for explanation: {}".format(expl))
+
+        for identifier in to_iterate:
+            is_negated = False
+            if isinstance(identifier, Not):
+                identifier = identifier.args[0]
+                is_negated = True
+
+            clause = get_identifier_clause(str(identifier))
+
+            if is_negated:
+                retranslated_expl.append(
+                    "\\+{}".format(
+                        clause
+                    )
+                )
+                probability *= 1 - probabilities_by_clause[clause]
+            else:
+                retranslated_expl.append(clause)
+                probability *= probabilities_by_clause[clause]
+
+        return probability, ", ".join(retranslated_expl)
+
     translated_expressions = []
 
     for current_expl in explanations:
@@ -83,38 +118,16 @@ def simplify_explanations(explanations, probabilities_by_clause, max_clauses=Non
     )
 
     new_explanations = []
-    for curr_expl in simplified_expression.args:
-        probability = 1.0
-
-        retranslated_expl = []
-        if isinstance(curr_expl, Symbol) or isinstance(curr_expl, Not):
-            to_iterate = [curr_expl]  # If there is only one clause (instead of an And)
-        elif isinstance(curr_expl, And):
-            to_iterate = curr_expl.args
-        else:
-            raise ValueError("Unexpected type for explanation: {}".format(curr_expl))
-
-        for identifier in to_iterate:
-            is_negated = False
-            if isinstance(identifier, Not):
-                identifier = identifier.args[0]
-                is_negated = True
-
-            clause = get_identifier_clause(str(identifier))
-
-            if is_negated:
-                retranslated_expl.append(
-                    "\\+{}".format(
-                        clause
-                    )
-                )
-                probability *= 1 - probabilities_by_clause[clause]
-            else:
-                retranslated_expl.append(clause)
-                probability *= probabilities_by_clause[clause]
-
-        new_explanations.append(
-            (probability, ", ".join(retranslated_expl))
+    if isinstance(simplified_expression, (And, Symbol, Not)):
+        new_explanations = [retranslate_explanation(simplified_expression)]
+    elif isinstance(simplified_expression, Or):
+        for curr_expl in simplified_expression.args:
+            new_explanations.append(retranslate_explanation(curr_expl))
+    else:
+        raise Exception(
+            "Unexpected type for simplified expression {} of type {}".format(
+                simplified_expression, type(simplified_expression)
+            )
         )
 
     return new_explanations
