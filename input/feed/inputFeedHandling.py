@@ -38,9 +38,27 @@ def create_live_audio_feed(conf, input_feed_conf):
     return LiveAudioFeed()
 
 
-def create_reddit_feed(conf, input_feed_conf):
-    from input.feed.redditFeed import RedditFeed
-    return RedditFeed(from_file=input_feed_conf['from_file'])
+def create_from_json_reddit_feed(conf, input_feed_conf):
+    from input.feed.fromJsonRedditFeed import FromJsonRedditFeed
+    return FromJsonRedditFeed(from_file=input_feed_conf['from_file'])
+
+
+def create_from_post_reddit_feed(conf, input_feed_conf):
+    from input.feed.fromPostRedditFeed import FromPostRedditFeed
+    return FromPostRedditFeed(
+        from_post=input_feed_conf['from_post'],
+        replace_more_limit=input_feed_conf.get('replace_more_limit', 0),
+        praw_name=input_feed_conf.get('praw_name', 'LiveEvents'),
+        max_comments=input_feed_conf.get('max_comments', None)
+    )
+
+
+def create_from_pickle_reddit_feed(conf, input_feed_conf):
+    from input.feed.fromPickleRedditFeed import FromPickleRedditFeed
+    return FromPickleRedditFeed(
+        from_pickle=input_feed_conf['from_pickle'],
+        max_comments=input_feed_conf.get('max_comments', None)
+    )
 
 
 def create_demo_audio_feed(conf, input_feed_conf):
@@ -52,7 +70,9 @@ input_feeds = {
     'VideoFeed': create_video_feed,
     'AudioFeed': create_audio_feed,
     'LiveAudioFeed': create_live_audio_feed,
-    'RedditFeed': create_reddit_feed,
+    'FromJsonRedditFeed': create_from_json_reddit_feed,
+    'FromPostRedditFeed': create_from_post_reddit_feed,
+    'FromPickleRedditFeed': create_from_pickle_reddit_feed,
     # 'DemoAudioFeed': create_demo_audio_feed,
 }
 

@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 
 
-class RedditFeed(object):
+class FromJsonRedditFeed(object):
     def __init__(self, from_file):
         with open(from_file, 'r') as f:
             loaded_json = json.load(f)
@@ -27,7 +27,7 @@ class RedditFeed(object):
         self.df = pd.DataFrame(data=entry_list, columns=columns)
 
     def get_max_length(self):
-        return len(self.df.index)
+        return len(self.df.index) - 1
 
     def __iter__(self):
         return self.df.iterrows()
