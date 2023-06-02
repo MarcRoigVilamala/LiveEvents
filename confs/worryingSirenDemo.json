@@ -2,7 +2,7 @@
     "input": {
         "input_feed": {
             "type": "AudioFeed",
-            "audio_file": "/home/marc/thesis/audios/demo_audio_gunshots.wav"
+            "audio_file": "data/Audio/demo_audio_gunshots.wav"
         },
         "event_generators": [
             {
