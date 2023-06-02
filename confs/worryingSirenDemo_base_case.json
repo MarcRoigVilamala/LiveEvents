@@ -1,0 +1,48 @@
+{
+    "input": {
+        "input_feed": {
+            "type": "AudioFeed",
+            "audio_file": "data/Audio/demo_audio_base.wav"
+        },
+        "event_generators": [
+            {
+                "type": "FromAudioNN"
+            }
+        ]
+    },
+    "output": {
+        "text": true,
+        "graph": {
+            "use_graph": true
+        },
+        "play_audio": true
+    },
+    "events": {
+        "tracked_ce": [
+            "ceWorryingSiren",
+            "ceGunShot",
+            "ceChildrenPlaying",
+            "ceStreetMusic",
+            "ceSiren"
+        ],
+        "event_definition": [
+            "rules/worryingSirenDemo/event_defs.pl",
+            "rules/worryingSirenDemo/prevTimestamp.pl"
+        ],
+        "use_framework": [
+            "sequence",
+            "eventCalculus"
+        ],
+        "ce_threshold": 0.5
+    },
+    "logic": {
+        "max_window": 32,
+        "cep_frequency": 1,
+        "group_size": 1,
+        "group_frequency": 1,
+        "precompile": "rules/worryingSirenDemo/worryingSiren_precompile_args.json"
+    },
+    "misc": {
+        "fps": 1.0
+    }
+}
