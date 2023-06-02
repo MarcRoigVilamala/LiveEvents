@@ -11,7 +11,11 @@
         ]
     },
     "output": {
-        "text": true
+        "text": true,
+        "graph": {
+            "use_graph": true
+        },
+        "play_audio": true
     },
     "events": {
         "tracked_ce": [
