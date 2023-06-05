@@ -40,7 +40,7 @@ class FromPostRedditFeed(object):
 
         self.df = pd.DataFrame(data=entry_list, columns=columns)
 
-        filepath = "./data/SavedRedditPosts/{}.pkl".format(from_post[23:].replace('/', '_'))
+        filepath = "./data/Reddit/{}.pkl".format(from_post[23:].replace('/', '_'))
         if not os.path.exists(filepath):
             self.df.to_pickle(filepath)
 

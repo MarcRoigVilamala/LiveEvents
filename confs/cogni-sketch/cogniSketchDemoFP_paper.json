@@ -1,0 +1,87 @@
+{
+    "input": {
+        "input_feed": {
+            "type": "FromJsonRedditFeed",
+            "from_file": "data/Reddit/False_Positive_Hate_Comments_Paper.json"
+        },
+        "event_generators": [
+            {
+                "type": "FromNLP",
+                "model_name": "MarcRoigVilamala/ethos_binary_hate_speech",
+                "model_identifier": "racist_en",
+                "ignore": [
+                    "nothate"
+                ]
+            }
+        ]
+    },
+    "output": {
+        "text": true,
+        "cogni_sketch": {
+            "url": "http://localhost:5010",
+            "project": "liveEvents FP B",
+            "project_owner": "aamas",
+            "user": "admin",
+            "password": "password",
+            "use_simplified_explanations": true,
+            "save_images_to": "cogni-sketch/data/saves/",
+            "base_x_by_object_type": {
+                "user": 270,
+                "comment": 270,
+                "event": 270,
+                "explanation": 90,
+                "complex_event": 270,
+                "graph": 270
+            },
+            "y_by_object_type": {
+                "user": 450,
+                "comment": 270,
+                "event": 150,
+                "explanation": 0,
+                "complex_event": -150,
+                "graph": -480
+            },
+            "x_change_by_object_type": {
+                "user": 540,
+                "comment": 540,
+                "event": 540,
+                "explanation": 180,
+                "complex_event": 540,
+                "graph": 540
+            },
+            "max_instances_per_timestamp": {
+                "user": 1,
+                "comment": 1,
+                "event": 1,
+                "explanation": 3,
+                "complex_event": 1,
+                "graph": 1
+            },
+            "min_explanation_threshold": 0.0,
+            "hide_threshold": 0.33
+        }
+    },
+    "events": {
+        "tracked_ce": [
+            "ceQuarantine"
+        ],
+        "event_definition": [
+            "rules/redditComments/event_defs.pl",
+            "rules/redditComments/prevTimestamp.pl"
+        ],
+        "use_framework": [
+            "sequence",
+            "instantEventCalculus"
+        ],
+        "ce_threshold": 0.4
+    },
+    "logic": {
+        "max_window": 2,
+        "cep_frequency": 1,
+        "group_size": 1,
+        "group_frequency": 1
+    },
+    "misc": {
+        "fps": 1.0
+    }
+}

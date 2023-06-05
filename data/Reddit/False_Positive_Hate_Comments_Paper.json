@@ -1,0 +1,50 @@
+{
+    "_id": {
+        "31": "fcopibb",
+        "328": "fcp4kqh",
+        "456": "fcp9g2u",
+        "547": "fcpb9qu"
+    },
+    "subreddit": {
+        "31": "teenagers",
+        "328": "teenagers",
+        "456": "teenagers",
+        "547": "teenagers"
+    },
+    "author": {
+        "31": -687295134225919011,
+        "328": 4312453424193953502,
+        "456": -8577227984696042495,
+        "547": -5260130199027612195
+    },
+    "created_utc": {
+        "31": 8136.0,
+        "328": 20270.0,
+        "456": 25057.0,
+        "547": 26955.0
+    },
+    "score": {
+        "31": 2,
+        "328": 2,
+        "456": 1,
+        "547": 2
+    },
+    "total_awards_received": {
+        "31": 0,
+        "328": 0,
+        "456": 0,
+        "547": 0
+    },
+    "body": {
+        "31": "Eastern Hemisphere gang",
+        "328": "East coast gang",
+        "456": "Not me\n\nMST gang rise up",
+        "547": "Australia gang rise up"
+    },
+    "submission": {
+        "31": "eib9tw",
+        "328": "eidhp0",
+        "456": "eie9sy",
+        "547": "eiekmu"
+    }
+}
