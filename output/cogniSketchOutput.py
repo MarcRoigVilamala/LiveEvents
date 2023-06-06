@@ -72,7 +72,7 @@ class CogniSketchOutput(LiveEventsOutput):
         self.user = self.cogni_sketch_conf['user']
         self.password = self.cogni_sketch_conf.get('password')
         if self.password is None:
-            self.password = getpass('Please enter your Cogni-Sketch password: ')
+            self.password = getpass('Please enter the password for user "{}" in Cogni-Sketch: '.format(self.user))
 
         self.graph = Graph(
             input_handler.input_feed.get_max_length(),
