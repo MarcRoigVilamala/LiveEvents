@@ -49,7 +49,10 @@ You will need to set up the user who will own the canvas on Cogni-Sketch. You ca
 
 Once the `aamas` user has been created, you need to log into the user and create a new project named `liveEvents FP`. This will create a new canvas that LiveEvents will use to post new nodes. This can be done through the hamburger menu on the right of the drop down project selection menu in the Cogni-Sketch interface. 
 
-Finally, you need to import the LiveEvents palette. This will add the node types that LiveEvents uses to generate the graph. This can be done through the hamburger menu on the right of the drop down palette menu in the Cogni-Sketch interface. Select the "Import Palette..." option and paste in the contents of the `cogni-sketch_palettes/liveEventsPalette.json` file. 
+Finally, you need to import the LiveEvents palette. This will add the node types that LiveEvents uses to generate the graph. This can be done through the hamburger menu on the right of the drop down palette menu in the Cogni-Sketch interface. Select the "Import Palette..." option and paste in the contents of the `cogni-sketch_palettes/liveEventsPalette.json` file.
+If you want the correct icons to appear on the nodes, you will also have to add them to cogni-sketch. This can be done with the following command:
+
+``cp cogni-sketch_palettes/icons/* cogni-sketch/public/images/palette/``
 
 **Note:** If you wish to use a different username from `aamas`, use a different project name or change the password for the `admin` user you will need to update those details in the `confs/cogni-sketch/cogniSketchDemoFP_paper.json` file. If the password field is removed from the file the program will ask for the password every time the program is run. The configuration also assumes that Cogni-Sketch is running locally at `http://localhost:5010`. This can also be changed through the configuration file.
 
