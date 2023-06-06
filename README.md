@@ -1,18 +1,77 @@
 # LiveEvents
 
-This is a system designed to detect complex events from a given input feed.
+This is a system designed to detect complex events from a given input feed. It is designed to allow for the use of multiple types of input data, having been used for audio, text and video.
 
-Usage:
+## Installation
+
+You can download LiveEvents using the following command:
+
+``git clone --recursive https://github.com/MarcRoigVilamala/LiveEvents.git``
+
+Using the `--recursive` modifier ensures that the Cogni-Sketch repository is also downloaded (recommended). It can be omitted if you do not plan on using Cogni-Sketch as an output.
+
+### Python Packages Installation
+
+After cloning the repository into your system, enter the folder using:
+
+``cd LiveEvents``
+
+Then, you can install the required packages using:
+
+``pip install -r requirements.txt``
+
+**Note:** Some additional functionalities may require more packages. However, the packages included in `requirements.txt` are sufficient for running the example demos below.
+
+### Cogni-Sketch Configuration
+
+These steps are only required to allow the use of Cogni-Sketch as a possible output. They can be omitted otherwise.
+
+To configure Cogni-Sketch, enter the folder using:
+
+``cd cogni-sketch``
+
+Then, follow the installation steps for Cogni-Sketch as detailed [here](https://github.com/dais-ita/cogni-sketch#installation). Note that you do not need to clone the Cogni-Sketch repository, as it has already been downloaded by using the `--recursive` argument above.
+
+To allow LiveEvents to inject nodes into the Cogni-Sketch graph, the `checkForProposals` property to true (see [here](https://github.com/dais-ita/cogni-sketch#dynamic-injection-of-graph-changes-via-api) for more details on this functionality). To do this, you need to modify the file `cogni-sketch/public/javascripts/private/core/core_settings.js` on line 61, setting the property to true. It should look like this:
+
+````
+...
+    // whether live checking for proposals is enabled (via polling in this version)
+    "checkForProposals": true, // false,
+...
+````
+
+#### Setup for AAMAS 2023 Demo
+
+To prepare the Cogni-Sketch enviroment for the AAMAS 2023 demo, some additional steps are required.
+
+You will need to set up the user who will own the canvas on Cogni-Sketch. You can follow the steps to create a user described [here](https://github.com/dais-ita/cogni-sketch#creating-users). The examples below assume that a user named `aamas` exists, so using the same name is recommended. You can choose any password you want. 
+
+Once the `aamas` user has been created, you need to log into the user and create a new project named `liveEvents FP`. This will create a new canvas that LiveEvents will use to post new nodes. This can be done through the hamburger menu on the right of the drop down project selection menu in the Cogni-Sketch interface. 
+
+Finally, you need to import the LiveEvents palette. This will add the node types that LiveEvents uses to generate the graph. This can be done through the hamburger menu on the right of the drop down palette menu in the Cogni-Sketch interface. Select the "Import Palette..." option and paste in the contents of the `cogni-sketch_palettes/liveEventsPalette.json` file. 
+
+**Note:** If you wish to use a different username from `aamas`, use a different project name or change the password for the `admin` user you will need to update those details in the `confs/cogniSketchDemoFP_paper.json` file. If the password field is removed from the file the program will ask for the password every time the program is run. The configuration also assumes that Cogni-Sketch is running locally at `http://localhost:5010`. This can also be changed through the configuration file.
+
+## Usage
+
+You can run LiveEvents with the following command while inside the main `LiveEvents` folder:
 
 ``python main.py [OPTIONS]``
 
-Where options can include any of the following:
+The easiest way to run the program is to use one of the pre-defined configurations. This can be done using `--conf path/to/file.json`. Some pre-deinfed configurations are provided in the [confs](confs) directory. This includes:
 
-## Configuration
+- A demonstration presented at AAMAS 2023 [Visualizing Logic Explanations for Social Media Moderation](https://www.southampton.ac.uk/~eg/AAMAS2023/pdfs/p3056.pdf). This demonstration observes a Reddit thread trying to detect if a community has concerning amounts of hate speech. The system also generates logic explanations for its predictions, making it easy for humans to detect *when* and *why* the system is wrong. 
+  - The example shown in [this video](https://youtu.be/rXOWDYeJVMA) can be run using `python main.py --conf confs/cogniSketchDemoFP_paper.json`.
+  - **Note:** this requires an instance of [Cogni-Sketch](https://github.com/dais-ita/cogni-sketch) to be running. Please ensure that all the configuration for Cogni-Sketch has been done acording to the details described above, or that the `confs/cogniSketchDemoFP_paper.json` has been updated accordingly.
+- An example that detects concerning situations in an urban setting based on audio input. The examples shown in [this video](https://youtu.be/dllH0VzppPM) can be run using:
+  - `--conf confs/audio/worryingSirenDemo_base_case.json` for the original version, where no threat is detected.
+  - `--conf confs/audio/worryingSirenDemo.json` for the modified version, where gunshots have been edited into the audio file to generate a concerning situation.
+  - `--conf confs/audio/safeEnvDemo.json` an additional version, which modifies the rules to generate an output that is easier to understand. This is done by grouping the "children playing" and "street music" classes into a single "safe environment" class. 
 
-`--conf path/to/file.json` can be used to load a JSON file with a pre-defined configuration. The values for this configuration can be modified using the rest of the options.
+The values defined by the configuration files can be overwritten for the current execution by using the modifiers described in the following section.
 
-## Further options
+## Modifiers
 
 ### Event definition
 
@@ -130,11 +189,7 @@ These are other options that may be used that don't fall into any of the classif
                                   loop
 ````
 
-## Execution Examples
 
-````
-python main.py confs/worryingSirenDemo.json
-````
 
 <!---
 ````
