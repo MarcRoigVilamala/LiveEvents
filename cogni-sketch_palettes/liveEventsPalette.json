@@ -1,0 +1,280 @@
+{
+ "name": "liveEvents",
+ "server_ts": 1685976406899,
+ "sections": [
+  {
+   "name": "core",
+   "label": "core"
+  },
+  {
+   "name": "liveEvents",
+   "label": "liveEvents"
+  }
+ ],
+ "items": {
+  "text": {
+   "id": "text",
+   "icon": "./images/palette/icon-text.svg",
+   "label": "text",
+   "position": 1,
+   "section": "core",
+   "settings": {
+    "canChangeTypeAfterCreation": true,
+    "defaultWidth": "500px",
+    "defaultCanHandle": "BY_DEFAULT"
+   },
+   "layout": "",
+   "schema": {
+    "type": "text",
+    "properties": {
+     "text": {
+      "domain": "text",
+      "type": "long text"
+     }
+    }
+   },
+   "nodeColor": "blue"
+  },
+  "file": {
+   "id": "file",
+   "icon": "./images/palette/icon-file.svg",
+   "label": "file",
+   "position": 2,
+   "section": "core",
+   "settings": {
+    "canChangeTypeAfterCreation": true,
+    "defaultWidth": "500px"
+   },
+   "layout": "",
+   "nodeColor": "blue"
+  },
+  "image": {
+   "id": "image",
+   "icon": "./images/palette/icon-image.svg",
+   "iconAlt": "icon-image",
+   "label": "image",
+   "position": 3,
+   "section": "core",
+   "settings": {
+    "canChangeTypeAfterCreation": true,
+    "defaultImageWidth": "430px",
+    "dropExtensions": [
+     "jpg",
+     "jpeg",
+     "png",
+     "svg",
+     "gif",
+     "bmp",
+     "tif"
+    ]
+   },
+   "layout": "",
+   "nodeColor": "blue"
+  },
+  "email": {
+   "id": "email",
+   "icon": "./images/palette/icon-email.svg",
+   "label": "email",
+   "position": 4,
+   "section": "extra",
+   "settings": {
+    "dropPrefixes": [
+     "https://mail.notes.na.collabserv.com/verse?mode=mailread",
+     "https://outlook.office.com/mail/deeplink"
+    ]
+   },
+   "layout": "",
+   "nodeColor": "blue"
+  },
+  "video": {
+   "id": "video",
+   "icon": "./images/palette/icon-video.svg",
+   "label": "video",
+   "position": 5,
+   "section": "core",
+   "settings": {
+    "canChangeTypeAfterCreation": true,
+    "defaultWidth": "280",
+    "defaultHeight": "170",
+    "autoplay": false,
+    "dropExtensions": [
+     "mov",
+     "mp4"
+    ],
+    "dropPrefixes": [
+     "http://www.youtube.",
+     "https://www.youtube."
+    ]
+   },
+   "layout": "",
+   "nodeColor": "blue"
+  },
+  "web": {
+   "id": "web",
+   "icon": "./images/palette/icon-web.svg",
+   "label": "web page",
+   "position": 9,
+   "section": "core",
+   "settings": {
+    "canChangeTypeAfterCreation": true,
+    "dropPrefixes": [
+     "http://",
+     "https://"
+    ]
+   },
+   "layout": "",
+   "nodeColor": "blue"
+  },
+  "header": {
+   "id": "header",
+   "icon": "./images/palette/icon-header.svg",
+   "iconAlt": "icon-header",
+   "label": "header",
+   "position": 11,
+   "section": "core",
+   "settings": {
+    "nodeClasses": [
+     "cs-node-header"
+    ],
+    "canChangeTypeAfterCreation": true,
+    "labelClasses": [
+     "cs-label-header"
+    ]
+   },
+   "layout": "",
+   "customColor": "#000000"
+  },
+  "todo": {
+   "id": "todo",
+   "icon": "./images/palette/icon-todo.svg",
+   "label": "todo",
+   "position": 12,
+   "section": "core",
+   "settings": {},
+   "layout": "",
+   "nodeColor": "red"
+  },
+  "json": {
+   "id": "json",
+   "icon": "./images/palette/icon-json.svg",
+   "label": "json",
+   "position": 13,
+   "section": "core",
+   "settings": {
+    "dropExtensions": [
+     "json"
+    ]
+   },
+   "layout": "",
+   "nodeColor": "blue"
+  },
+  "unknown": {
+   "id": "unknown",
+   "icon": "./images/palette/icon-error.svg",
+   "label": "unknown",
+   "position": 14,
+   "section": "core",
+   "settings": {},
+   "layout": "",
+   "nodeColor": "red"
+  },
+  "user": {
+   "id": "user",
+   "icon": "./images/palette/user.png",
+   "section": "liveEvents",
+   "settings": {},
+   "layout": "<table class=\"table table-bordered\">\n\n  <tr>\n\n    <th>username</td>\n\n    <td>${this.properties.username}</td>\n\n  </tr>\n\n  <tr>\n\n    <th>downvotes</td>\n\n    <td>${this.properties.downvotes}</td>\n\n  </tr>\n\n  <tr>\n\n   ${(this.properties.ban) ?\n\n     `<td colspan=\"2\" align=\"middle\"><div style=\"display:inline-block\"><div class=\"alert-danger\">User is BANNED</div></div>  <button class=\"cs-allow-clicks\" onclick=\"eventSetProperty('${this.uid}', 'ban', false)\">unban</button></td>`\n\n     :\n\n     `<td colspan=\"2\" align=\"middle\"><div style=\"display:inline-block\"><div class=\"alert-success\">User is not banned</div></div>  <button class=\"cs-allow-clicks\" onclick=\"eventSetProperty('${this.uid}', 'ban', true)\">ban</button></td>`\n\n}\n\n  </tr>\n\n</table>",
+   "nodeColor": "green"
+  },
+  "unlikelyExplanation": {
+   "id": "unlikelyExplanation",
+   "icon": "./images/palette/icon-question.svg",
+   "iconAlt": "icon-unlikelyExplanation",
+   "section": "liveEvents",
+   "settings": {},
+   "layout": "",
+   "nodeColor": "grey"
+  },
+  "mediumExplanation": {
+   "id": "mediumExplanation",
+   "icon": "./images/palette/icon-question.svg",
+   "iconAlt": "icon-explanation",
+   "section": "liveEvents",
+   "settings": {},
+   "layout": "",
+   "nodeColor": "orange"
+  },
+  "likelyExplanation": {
+   "id": "likelyExplanation",
+   "icon": "./images/palette/icon-question.svg",
+   "iconAlt": "icon-explanation",
+   "section": "liveEvents",
+   "settings": {},
+   "layout": "",
+   "nodeColor": "green"
+  },
+  "unlikelySimpleEvent": {
+   "id": "unlikelySimpleEvent",
+   "icon": "./images/palette/icon-simple_event.png",
+   "iconAlt": "icon-unlikelySimpleEvent",
+   "section": "liveEvents",
+   "settings": {},
+   "layout": "",
+   "nodeColor": "grey"
+  },
+  "mediumSimpleEvent": {
+   "id": "mediumSimpleEvent",
+   "icon": "./images/palette/icon-simple_event.png",
+   "iconAlt": "icon-event",
+   "section": "liveEvents",
+   "settings": {},
+   "layout": "",
+   "nodeColor": "orange"
+  },
+  "likelySimpleEvent": {
+   "id": "likelySimpleEvent",
+   "icon": "./images/palette/icon-simple_event.png",
+   "iconAlt": "icon-event",
+   "section": "liveEvents",
+   "settings": {},
+   "layout": "",
+   "nodeColor": "green"
+  },
+  "unlikelyComplexEvent": {
+   "id": "unlikelyComplexEvent",
+   "icon": "./images/palette/icon-complex_event.svg",
+   "iconAlt": "icon-unlikelyComplexEvent",
+   "section": "liveEvents",
+   "settings": {},
+   "layout": "",
+   "nodeColor": "grey"
+  },
+  "mediumComplexEvent": {
+   "id": "mediumComplexEvent",
+   "icon": "./images/palette/icon-complex_event.svg",
+   "iconAlt": "icon-event",
+   "section": "liveEvents",
+   "settings": {},
+   "layout": "",
+   "nodeColor": "orange"
+  },
+  "likelyComplexEvent": {
+   "id": "likelyComplexEvent",
+   "icon": "./images/palette/icon-complex_event.svg",
+   "iconAlt": "icon-event",
+   "section": "liveEvents",
+   "settings": {},
+   "layout": "",
+   "nodeColor": "green"
+  },
+  "redditComment": {
+   "id": "redditComment",
+   "icon": "./images/palette/reddit-logo.png",
+   "iconAlt": "icon-redditComment",
+   "section": "liveEvents",
+   "settings": {},
+   "layout": "<table style=\"background-color:white;width:400px\"><tr><td></td><td>Posted on ${this.properties.created_at}</td></tr><tr><td style=\"padding:10px;white-space:pre\">↑\n${this.properties.score}\n↓</td><td style=\"padding:10px;font-size:18px\">${this.properties.text}</td></tr></table>",
+   "customColor": "#000000"
+  }
+ }
+}
