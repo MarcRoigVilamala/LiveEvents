@@ -51,7 +51,7 @@ Once the `aamas` user has been created, you need to log into the user and create
 
 Finally, you need to import the LiveEvents palette. This will add the node types that LiveEvents uses to generate the graph. This can be done through the hamburger menu on the right of the drop down palette menu in the Cogni-Sketch interface. Select the "Import Palette..." option and paste in the contents of the `cogni-sketch_palettes/liveEventsPalette.json` file. 
 
-**Note:** If you wish to use a different username from `aamas`, use a different project name or change the password for the `admin` user you will need to update those details in the `confs/cogniSketchDemoFP_paper.json` file. If the password field is removed from the file the program will ask for the password every time the program is run. The configuration also assumes that Cogni-Sketch is running locally at `http://localhost:5010`. This can also be changed through the configuration file.
+**Note:** If you wish to use a different username from `aamas`, use a different project name or change the password for the `admin` user you will need to update those details in the `confs/cogni-sketch/cogniSketchDemoFP_paper.json` file. If the password field is removed from the file the program will ask for the password every time the program is run. The configuration also assumes that Cogni-Sketch is running locally at `http://localhost:5010`. This can also be changed through the configuration file.
 
 ## Usage
 
@@ -62,8 +62,8 @@ You can run LiveEvents with the following command while inside the main `LiveEve
 The easiest way to run the program is to use one of the pre-defined configurations. This can be done using `--conf path/to/file.json`. Some pre-deinfed configurations are provided in the [confs](confs) directory. This includes:
 
 - A demonstration presented at AAMAS 2023 [Visualizing Logic Explanations for Social Media Moderation](https://www.southampton.ac.uk/~eg/AAMAS2023/pdfs/p3056.pdf). This demonstration observes a Reddit thread trying to detect if a community has concerning amounts of hate speech. The system also generates logic explanations for its predictions, making it easy for humans to detect *when* and *why* the system is wrong. 
-  - The example shown in [this video](https://youtu.be/rXOWDYeJVMA) can be run using `python main.py --conf confs/cogniSketchDemoFP_paper.json`.
-  - **Note:** this requires an instance of [Cogni-Sketch](https://github.com/dais-ita/cogni-sketch) to be running. Please ensure that all the configuration for Cogni-Sketch has been done acording to the details described above, or that the `confs/cogniSketchDemoFP_paper.json` has been updated accordingly.
+  - The example shown in [this video](https://youtu.be/rXOWDYeJVMA) can be run using `python main.py --conf confs/cogni-sketch/cogniSketchDemoFP_paper.json`.
+  - **Note:** this requires an instance of [Cogni-Sketch](https://github.com/dais-ita/cogni-sketch) to be running. Please ensure that all the configuration for Cogni-Sketch has been done acording to the details described above, or that the `confs/cogni-sketch/cogniSketchDemoFP_paper.json` has been updated accordingly.
 - An example that detects concerning situations in an urban setting based on audio input. The examples shown in [this video](https://youtu.be/dllH0VzppPM) can be run using:
   - `--conf confs/audio/worryingSirenDemo_base_case.json` for the original version, where no threat is detected.
   - `--conf confs/audio/worryingSirenDemo.json` for the modified version, where gunshots have been edited into the audio file to generate a concerning situation.
