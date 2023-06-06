@@ -19,7 +19,7 @@
         "text": true,
         "cogni_sketch": {
             "url": "http://localhost:5010",
-            "project": "liveEvents FP B",
+            "project": "liveEvents FP",
             "project_owner": "aamas",
             "user": "admin",
             "password": "password",
