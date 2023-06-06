@@ -4,3 +4,12 @@ numpy>=1.19.1
 problog
 pandas
 ProblogPreCompilation
+sympy
+torch
+torchvision
+torchaudio
+resampy
+soundfile
+pydub
+tqdm
+transformers
