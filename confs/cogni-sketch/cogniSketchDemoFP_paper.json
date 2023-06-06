@@ -79,7 +79,8 @@
         "max_window": 2,
         "cep_frequency": 1,
         "group_size": 1,
-        "group_frequency": 1
+        "group_frequency": 1,
+        "evaluatable": "mykbest"
     },
     "misc": {
         "fps": 1.0
