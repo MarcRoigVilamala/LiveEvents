@@ -25,7 +25,11 @@ class Event(InputClause):
 
     @property
     def timestamp_first(self):
-        return self.event_type in ['sound', 'nlp']
+        return self.event_type_is_timestamp_first(self.event_type)
+
+    @staticmethod
+    def event_type_is_timestamp_first(event_type):
+        return event_type in ['sound', 'nlp']
 
     def for_mock_model(self):
         return self.to_problog_with(probability=0.0)
@@ -60,22 +64,36 @@ class Event(InputClause):
             for l in f:
                 if '::' in l:
                     probability, rest = l.strip().split('::')
-                    event_type, rest = rest.split('(', 1)
-                    if event_type == 'sound':
-                        timestamp, event = rest.rsplit(', ', 1)
-                        event = event[:-2]
-                    else:
-                        event, timestamp = rest.rsplit(', ', 1)
-                        timestamp = timestamp[:-2]
-
                     probability = float(probability)
-                    timestamp = int(timestamp)
+
+                    timestamp, event, event_type = Event.extract_values_from_clause(rest)
 
                     res.append(
                         Event(timestamp, event, probability, event_type)
                     )
 
             return res
+
+    @staticmethod
+    def extract_values_from_clause(clause: str):
+        clause = clause.replace(', ', ',')
+
+        event_type, rest = clause.split('(', 1)
+        if Event.event_type_is_timestamp_first(event_type):
+            timestamp, event = rest.rsplit(',', 1)
+            if event.endswith(")."):
+                event = event[:-2]
+            elif event.endswith(")"):
+                event = event[:-1]
+        else:
+            event, timestamp = rest.rsplit(',', 1)
+            if timestamp.endswith(")."):
+                timestamp = timestamp[:-2]
+            elif timestamp.endswith(")"):
+                timestamp = timestamp[:-1]
+
+        timestamp = int(timestamp)
+        return int(timestamp), event, event_type
 
     def to_nice_string(self, prob_precision=3):
         # return "{:.3}::{}".format(self.probability, self.identifier)
