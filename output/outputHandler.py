@@ -4,6 +4,12 @@ from output.text import Text
 from output.cleanText import CleanText
 from output.timings import Timings
 from output.graph import Graph
+
+from input.feed.fromJsonRedditFeed import FromJsonRedditFeed
+from input.feed.fromPickleRedditFeed import FromPickleRedditFeed
+from input.feed.fromPostRedditFeed import FromPostRedditFeed
+from input.feed.audioFeed import AudioFeed
+
 # If your output requires uncommon libraries, use local imports to avoid forcing them for unrelated functions
 
 
@@ -62,14 +68,17 @@ class OutputHandler(object):
 
         if conf['output'].get('play_audio'):
             from output.audio import Audio
-            from input.feed.audioFeed import AudioFeed
             assert isinstance(input_handler.input_feed, AudioFeed), "The input needs to be AudioFeed to play audio"
 
             self.outputs.append(Audio(input_handler.input_feed.audio_file))
 
         if conf['output'].get('cogni_sketch'):
-            from output.cogniSketchOutput import CogniSketchOutput
-            self.outputs.append(CogniSketchOutput(conf, tracked_ce, input_handler))
+            input_feed = input_handler.input_feed
+            if isinstance(input_feed, (FromJsonRedditFeed, FromPickleRedditFeed, FromPostRedditFeed)):
+                from output.cogniSketch.cogniSketchRedditOutput import CogniSketchRedditOutput
+                self.outputs.append(CogniSketchRedditOutput(conf, tracked_ce, input_handler))
+            else:
+                raise ValueError("Cogni-Sketch does not support this input feed type: {}".format(type(input_feed)))
 
     def finish_initialization(self):
         for o in self.outputs:

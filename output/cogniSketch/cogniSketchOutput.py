@@ -6,6 +6,7 @@ from datetime import datetime
 from enum import Enum
 
 from ProbCEP.explanation_utils import parse_explanation_list, simplify_explanations, extract_clauses_from
+from input.eventGeneration.event import Event
 from output.graph import Graph
 from output.liveEventsOutupt import LiveEventsOutput
 
@@ -32,7 +33,7 @@ def probability_to_words(prob, using_table=None):
         using_table = PROBABILITY_TO_WORDS_TABLE
 
     for label_prob, label in using_table:
-        if prob < label_prob:
+        if prob <= label_prob:
             return label
 
     raise Exception('Probability {} is too high for given table'.format(prob))
@@ -143,6 +144,8 @@ class CogniSketchOutput(LiveEventsOutput):
         self.max_explanations_per_ce = self.max_instances_per_timestamp['explanation'] // len(tracked_ce)
         self.min_explanation_threshold = self.cogni_sketch_conf.get("min_explanation_threshold", 0.0)
         self.hide_threshold = self.cogni_sketch_conf.get("hide_threshold", 0.33)
+
+        self.tracked_simple_events = self.cogni_sketch_conf.get("tracked_simple_events", None)
 
         self.probability_to_words_table = self.cogni_sketch_conf.get(
             "probability_to_words_table", SIMPLE_PROBABILITY_TO_WORDS_TABLE
@@ -364,62 +367,7 @@ class CogniSketchOutput(LiveEventsOutput):
 
         return graph_id
 
-    def prepare_user(self, user, timestamp, force_pending=True, hide=False):
-        user_id = "{}user_{}".format(self.uid_start(), user)
-
-        def create_user_json():
-            return {
-                **self.get_default_obj_json("user", timestamp, hide),
-                "uid": user_id,
-                "type": "user",
-                "mode": "full",
-                "data": {
-                    "properties": {
-                        "username": user
-                    },
-                    "label": ""
-                }
-            }
-
-        self.create_with(
-            uid=user_id,
-            create_json_method=create_user_json,
-            force_pending=force_pending
-        )
-
-        return user_id
-
-    def prepare_comment(self, comment, timestamp, force_pending=True, hide=False):
-        comment_id = "{}comment_{}".format(self.uid_start(), comment['post_id'])
-
-        def create_comment_json():
-            return {
-                **self.get_default_obj_json("comment", timestamp, hide),
-                "uid": comment_id,
-                "type": "redditComment",
-                "data": {
-                    "properties": {
-                        "text": comment['body'].replace('\n', '<br>'),
-                        "score": str(comment['score']),
-                        # "created_at": datetime.fromtimestamp(comment['created_utc']).strftime("%c"),
-                        "created_at": datetime.fromtimestamp(comment['created_utc']).strftime("%d/%m/%Y %H:%M"),
-                        # "created_at": datetime.fromtimestamp(comment['created_utc']).strftime("%d/%m/%Y"),
-                        "subreddit": comment['subreddit'],
-                        "total_awards_received": comment['total_awards_received']
-                    },
-                    "label": ""
-                }
-            }
-
-        self.create_with(
-            uid=comment_id,
-            create_json_method=create_comment_json,
-            force_pending=force_pending
-        )
-
-        return comment_id
-
-    def prepare_nlp_output(self, event, force_pending=True, hide=False):
+    def prepare_simple_event(self, event, force_pending=True, hide=False):
         event_id = "{}event_{}_{}".format(self.uid_start(), event.identifier, event.timestamp)
 
         def create_event_json():
@@ -540,22 +488,13 @@ class CogniSketchOutput(LiveEventsOutput):
 
         return explanation_id
 
-    def get_explanation_clause(self, clause, force_pending=True):
-        if clause.startswith('holdsAt'):
-            identifier, timestamp = clause.split('(')[1].split(',')
+    def get_explanation_clause(self, clause):
+        timestamp, event, event_type = Event.extract_values_from_clause(clause)
 
-            timestamp = timestamp[:-1]  # Remove the ")" at the end
-
-            return "{}complex_event_{}_{}".format(self.uid_start(), identifier.split('=')[0], timestamp)
-            # return None
-        elif clause.startswith('nlp'):
-            timestamp, identifier = clause.split('(')[1].split(',')
-
-            identifier = identifier[:-1]  # Remove the ")" at the end
-
-            return "{}event_{}_{}".format(self.uid_start(), identifier, timestamp)
+        if event_type.startswith('holdsAt'):
+            return "{}complex_event_{}_{}".format(self.uid_start(), event.split('=')[0], timestamp)
         else:
-            raise ValueError('Unknown explanation clause: {}'.format(clause))
+            return "{}event_{}_{}".format(self.uid_start(), event, timestamp)
 
     def create_with(self, uid, create_json_method, force_pending=False):
         stage = self.get_uid_stage(uid)
@@ -619,52 +558,33 @@ class CogniSketchOutput(LiveEventsOutput):
             }
 
     def update(self, output_update):
-        if output_update.get('new_evaluation'):
-            force_pending = bool(output_update.get('new_complex_events'))
+        raise NotImplementedError("The update() method needs to be overwritten for every type of output")
 
-            graph_id = None
-            if self.graph:
-                graph_id = self.prepare_graph(output_update, force_pending=force_pending)
-
-            self.add_author_comment_and_events(output_update, force_pending=force_pending)
-
-            new_complex_event_ids = self.add_complex_events(output_update, graph_id, force_pending=force_pending)
-
-            self.add_explanations(new_complex_event_ids, output_update, force_pending=force_pending)
-
-            if self.cogni_sketch_conf.get("send_on_update", False):
-                if self.send_pending():  # Send pending. If any updates were sent, wait for user input
-                    input("Press enter to continue")
-
-    def add_author_comment_and_events(self, output_update, force_pending):
-        for timestamp, comment in output_update['relevant_frames']:
-            comment_event_ids, some_nlp_shown = self.add_nlp_outputs(force_pending, output_update, timestamp)
-
-            # user_id = self.prepare_user(comment['author'], timestamp, force_pending=force_pending)
-            comment_id = self.prepare_comment(comment, timestamp, force_pending=force_pending, hide=not some_nlp_shown)
-
-            # if force_pending:
-            #     self.add_link(user_id, comment_id, "posts")
-
-            for nlp_output_id in comment_event_ids:
-                self.add_link(comment_id, nlp_output_id, "NLP detects", force_pending=force_pending)
-
-    def add_nlp_outputs(self, force_pending, output_update, timestamp):
+    def add_simple_events(self, force_pending, output_update, timestamp):
         some_shown = False
 
-        comment_event_ids = []
+        simple_event_ids = []
         for event in output_update['relevant_events']:
-            if event.timestamp == timestamp and event.event_type == 'nlp':
+            if event.timestamp == timestamp and self.is_simple_event(event) and self.is_tracked_simple_event(event):
                 hide = event.probability < self.hide_threshold
 
                 some_shown = some_shown or not hide
 
-                nlp_output_id = self.prepare_nlp_output(
+                simple_event_id = self.prepare_simple_event(
                     event, force_pending=force_pending, hide=hide
                 )
 
-                comment_event_ids.append(nlp_output_id)
-        return comment_event_ids, some_shown
+                simple_event_ids.append(simple_event_id)
+        return simple_event_ids, some_shown
+
+    def is_simple_event(self, event):
+        return event.event_type != 'holdsAt_'
+
+    def is_tracked_simple_event(self, event):
+        if self.tracked_simple_events is None:
+            return True
+
+        return event.identifier in self.tracked_simple_events
 
     def add_complex_events(self, output_update, graph_id, force_pending):
         new_complex_event_ids = []
@@ -699,67 +619,17 @@ class CogniSketchOutput(LiveEventsOutput):
                             max_clauses=8
                         )
 
-                    shown_explanations = explanations[:self.max_explanations_per_ce - 1]
-                    other_explanations = explanations[self.max_explanations_per_ce - 1:]
+                    shown_explanations, other_explanations = self.choose_shown_explanations(explanations)
 
-                    # Get the rest of the explanations that account for more than self.min_explanation_threshold
-                    # This is done to ignore explanations that contribute very minimally
-                    other_explanations = list(
-                        filter(
-                            lambda x: x[0] > self.min_explanation_threshold,
-                            other_explanations
-                        )
+                    n_explanations_added = self.add_shown_explanations(
+                        ce_id, complex_event, shown_explanations, timestamp, force_pending
                     )
 
-                    if len(other_explanations) == 1:
-                        # If there is only 1 additional explanation, show it directly
-                        shown_explanations += other_explanations
-                        other_explanations = []
-
-                    n_explanations_added = 0
-
-                    for current_explan in shown_explanations:
-                        # If the probability of the current explanation is lower than self.min_explanation_threshold,
-                        # stop adding explanations as they don't contribute enough to be relevant
-                        if current_explan[0] < self.min_explanation_threshold:
-                            break
-
-                        explan_id = self.prepare_explanation(
-                            complex_event, timestamp, current_explan, force_pending=force_pending,
-                            hide=current_explan[0] < self.hide_threshold
-                        )
-                        n_explanations_added += 1
-
-                        self.add_link(explan_id, ce_id, "explains", force_pending=force_pending)
-
-                        for is_negated, clause in extract_clauses_from(current_explan[1]):
-                            clause_id = self.get_explanation_clause(clause)
-
-                            self.add_link(clause_id, explan_id, "is part of", force_pending=force_pending)
-
                     if other_explanations:
-                        # Get the set of clauses for other explanations. Each element is an is_negated, clause pair
-                        other_explan_clauses = set(
-                            sum(
-                                map(
-                                    lambda x: extract_clauses_from(x[1]),
-                                    other_explanations
-                                ),
-                                []
-                            )
-                        )
-
-                        explan_id = self.prepare_other_explanation(
-                            complex_event, timestamp, other_explanations, force_pending=force_pending, hide=True
+                        self.add_other_explanations(
+                            ce_id, complex_event, other_explanations, timestamp, force_pending
                         )
                         n_explanations_added += 1
-
-                        self.add_link(explan_id, ce_id, force_pending=force_pending)
-
-                        for is_negated, clause in other_explan_clauses:
-                            clause_id = self.get_explanation_clause(clause)
-
-                            self.add_link(clause_id, explan_id, "is part of", force_pending=force_pending)
 
                     # If we have added fewer explanations than max_explanations_per_ce, call get_pos for the difference
                     # of times. This ensures that the explanations for each complex event always appear in the same
@@ -769,6 +639,74 @@ class CogniSketchOutput(LiveEventsOutput):
                     #  timestamps so it doesn't work when there are explanations for multiple complex events.
                     for i in range(n_explanations_added, self.max_explanations_per_ce):
                         self.get_pos("explanation", timestamp)
+
+    def add_other_explanations(self, ce_id, complex_event, other_explanations, timestamp, force_pending):
+        # Get the set of clauses for other explanations. Each element is an is_negated, clause pair
+        other_explan_clauses = set(
+            sum(
+                map(
+                    lambda x: extract_clauses_from(x[1]),
+                    other_explanations
+                ),
+                []
+            )
+        )
+
+        explan_id = self.prepare_other_explanation(
+            complex_event, timestamp, other_explanations, force_pending=force_pending, hide=True
+        )
+
+        self.add_link(explan_id, ce_id, force_pending=force_pending)
+        for is_negated, clause in other_explan_clauses:
+            clause_id = self.get_explanation_clause(clause)
+
+            self.add_link(clause_id, explan_id, "is part of", force_pending=force_pending)
+
+    def add_shown_explanations(self, ce_id, complex_event, shown_explanations, timestamp, force_pending):
+        n_explanations_added = 0
+        for current_explan in shown_explanations:
+            # If the probability of the current explanation is lower than self.min_explanation_threshold,
+            # stop adding explanations as they don't contribute enough to be relevant
+            if current_explan[0] < self.min_explanation_threshold:
+                break
+
+            explan_id = self.prepare_explanation(
+                complex_event, timestamp, current_explan, force_pending=force_pending,
+                hide=current_explan[0] < self.hide_threshold
+            )
+            n_explanations_added += 1
+
+            self.add_link(explan_id, ce_id, "explains", force_pending=force_pending)
+
+            for is_negated, clause in extract_clauses_from(current_explan[1]):
+                clause_id = self.get_explanation_clause(clause)
+
+                if CSObjStage.will_be_on_canvas(self.get_uid_stage(clause_id)):
+                    self.add_link(clause_id, explan_id, "is part of", force_pending=force_pending)
+                else:
+                    # TODO: Decide what to do if one of the explanation clauses is not on the canvas
+                    pass
+        return n_explanations_added
+
+    def choose_shown_explanations(self, explanations):
+        shown_explanations = explanations[:self.max_explanations_per_ce - 1]
+        other_explanations = explanations[self.max_explanations_per_ce - 1:]
+
+        # Get the rest of the explanations that account for more than self.min_explanation_threshold
+        # This is done to ignore explanations that contribute very minimally
+        other_explanations = list(
+            filter(
+                lambda x: x[0] > self.min_explanation_threshold,
+                other_explanations
+            )
+        )
+
+        if len(other_explanations) == 1:
+            # If there is only 1 additional explanation, show it directly
+            shown_explanations += other_explanations
+            other_explanations = []
+
+        return shown_explanations, other_explanations
 
     def update_pending_links(self):
         # For all the standby links, if both the source and target are going to be in the canvas, set them to pending
@@ -785,6 +723,12 @@ class CogniSketchOutput(LiveEventsOutput):
         self.update_pending_links()
 
         if self.pending_links or self.pending_objects:
+            for link in self.pending_links:
+                if not CSObjStage.will_be_on_canvas(self.get_uid_stage(link['targetRef'])):
+                    print("Missing targetRef: {}".format(link))
+                if not CSObjStage.will_be_on_canvas(self.get_uid_stage(link['sourceRef'])):
+                    print("Missing sourceRef: {}".format(link))
+
             requests.post(
                 self.proposal_url,
                 json={
